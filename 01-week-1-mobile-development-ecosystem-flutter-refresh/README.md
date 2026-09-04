@@ -45,6 +45,12 @@ Mempelajari pengetahuan dasar dalam membangun aplikasi mobile menggunakan Flutte
 
 Berikut bukti visual dan dokumentasi:
 
+- Tampilan flutter doctor
+![screenshot](screenshots/flutter_doctor.jpeg)
+
+- Tampilan flutter devices
+![screenshot](screenshots/flutter_devices.jpeg)
+
 - Tampilan awal:
 
 ![screenshot](screenshots/tampilan_awal.jpeg)
