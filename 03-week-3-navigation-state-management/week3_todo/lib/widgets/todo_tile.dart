@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/todo_provider.dart';
+import '../providers/todo_provider.dart';
 
 /// Widget terpisah untuk menampilkan satu item tugas dalam daftar ToDo.
 class TodoTile extends ConsumerWidget {

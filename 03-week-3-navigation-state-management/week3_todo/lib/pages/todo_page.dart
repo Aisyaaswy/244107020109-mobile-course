@@ -8,18 +8,48 @@ class TodoPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todos = ref.watch(todoListProvider);
+    final filteredTodos = ref.watch(filteredTodosProvider);
+    final currentFilter = ref.watch(todoFilterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ToDo Riverpod')),
-      body: todos.isEmpty
-          ? const Center(child: Text('Belum ada tugas'))
-          : ListView.builder(
-              itemCount: todos.length,
-              itemBuilder: (context, index) => TodoTile(
-                todo: todos[index],
-                index: index,
+      appBar: AppBar(
+        title: const Text('ToDo Riverpod'),
+        actions: [
+          PopupMenuButton<TodoFilter>(
+            initialValue: currentFilter,
+            onSelected: (filter) {
+              ref.read(todoFilterProvider.notifier).setFilter(filter);
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: TodoFilter.all,
+                child: Text('Semua'),
               ),
+              PopupMenuItem(
+                value: TodoFilter.active,
+                child: Text('Belum Selesai'),
+              ),
+              PopupMenuItem(
+                value: TodoFilter.completed,
+                child: Text('Selesai'),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: filteredTodos.isEmpty
+          ? const Center(child: Text('Tidak ada tugas'))
+          : ListView.builder(
+              itemCount: filteredTodos.length,
+              itemBuilder: (context, index) {
+                final todo = filteredTodos[index];
+                final originalIndex = ref.watch(todoListProvider).indexOf(todo);
+
+                return TodoTile(
+                  todo: todo,
+                  index: originalIndex,
+                );
+              },
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context, ref),

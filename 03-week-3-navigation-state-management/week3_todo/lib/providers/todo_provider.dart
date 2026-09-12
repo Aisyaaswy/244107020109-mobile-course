@@ -26,3 +26,32 @@ class TodoListNotifier extends Notifier<List<Todo>> {
 
 final todoListProvider =
     NotifierProvider<TodoListNotifier, List<Todo>>(TodoListNotifier.new);
+
+enum TodoFilter { all, active, completed }
+
+// provider untuk mengelola filter tugas saat ini
+class TodoFilterNotifier extends Notifier<TodoFilter> {
+  @override
+  TodoFilter build() => TodoFilter.all;
+
+  void setFilter(TodoFilter filter) => state = filter;
+}
+
+final todoFilterProvider =
+    NotifierProvider<TodoFilterNotifier, TodoFilter>(TodoFilterNotifier.new);
+
+// provider turunan untuk mendapatkan daftar tugas yang difilter berdasarkan filter saat ini
+final filteredTodosProvider = Provider<List<Todo>>((ref) {
+  final todos = ref.watch(todoListProvider);
+  final filter = ref.watch(todoFilterProvider);
+
+  switch (filter) {
+    case TodoFilter.active:
+      return todos.where((todo) => !todo.done).toList();
+    case TodoFilter.completed:
+      return todos.where((todo) => todo.done).toList();
+    case TodoFilter.all:
+    default:
+      return todos;
+  }
+});
