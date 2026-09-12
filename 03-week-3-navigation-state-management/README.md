@@ -74,3 +74,49 @@ Menggunakan metode `.when()` dari `AsyncValue `yang menangani 3 kondisi secara e
 ![screenshots](docs/hasil_testing.png)
 
 ### Refactoring Challeng
+1. Komponen baris tugas pada daftar ToDo dipisahkan dari TodoPage menjadi widget tersendiri bernama TodoTile.
+![screenshots](screenshots/refact_1.png)
+Setiap baris tugas (terdiri dari Checkbox, judul tugas, dan IconButton hapus) berhasil ditampilkan menggunakan komponen TodoTile. Fungsi centang dan hapus berjalan lancar dengan memicu aksi pada todoListProvider.
+2. ![screenshots](screenshots/refact_2.png)
+3. Penambahan NavigatorBar untuk memudahkan berpindah
+- path URL halaman todo 
+![screenshots](screenshots/todo_page.png)
+- path URL halaman statistik
+![screenshots](screenshots/statistik_page.png)
+
+### Checklist verifikasi mandiri
+1. Navigasi GoRouter bekerja: pindah halaman, back, dan akses path detail langsung.
+- path URL halaman todo 
+![screenshots](screenshots/todo_page.png)
+- path URL halaman statistik
+![screenshots](screenshots/statistik_page.png)
+2. ProviderScope membungkus root aplikasi; state ToDo bertahan saat berpindah halaman.
+- saat berpindah ke halaman statistik, tugas yang telah ditambahkan ke todo tetap ada, tidak hilang
+![screenshots](screenshots/todo_page.png)
+3. UI AsyncValue menangani loading, error, dan success, bukan hanya success.
+- loading
+![screenshots](screenshots/async_loading.png)
+- error
+![screenshots](screenshots/async_error.png)
+- success
+![screenshots](screenshots/todo_page.png)
+4. flutter analyze tanpa issue dan semua test lulus.
+![screenshots](screenshots/flutter_analyze.png)
+
+### Refleksi
+1. Kapan setState masih cukup, dan kapan state harus naik ke Riverpod?
+- dapat menggunakan `setState` ketika state bersifat lokal atau hanya dibutuhkan oleh satu widget itu sendiri, dan state harus naik ke Riverpod ketika state bersifat global/shared yang perlu dibagikan atau dibaca oleh beberapa widget/halaman yang berbeda.
+2. Apa perbedaan context.go dan context.push, dan kapan masing-masing tepat digunakan?
+- context.go 
+  - navigasi berdasarkan path URL
+  - penyusunan stack tidak selalu menumpuk rute baru
+  - cocok untuk navigasi utama seperti berpindah tab via NavigatorBar
+- context.push
+  - menambahkan halaman baru di atas stack halaman yang ada
+  - menumpuk halaman baru secara eksplisit di atas halaman saat ini
+  - cocok untuk alur sementara yang membutuhkan tombol back kembali ke layar sebelumnya.
+3. Bagaimana AsyncValue mencegah bug dibanding tiga boolean terpisah?
+- menggunakan tiga boolean terpisah rawan menimbulkan bug karena berpotensi menciptakan state yang tidak valid, async mencegah bug dengan cara mengisolasi status data menjadi bentuk sealed class/discriminal union yang memiliki 3 status mutlak (data, error dan loading).
+4. Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?
+- Penanganan Waktu Asinkron pada Unit Test (stats_notifier_test.dart)perbaikan yang dilakukan dengan menambahkan library fake_async dan menggunakan async.elapse() alih-alih membiarkan penundaan waktu riil (Future.delayed). Dikarenakan AI di awal tidak memperhitungkan bahwa eksekusi Future.delayed(Duration(seconds: 2)) pada unit test menyebabkan timeout error (30 detik). Dengan fake_async, waktu diuji secara deterministik dan instan.
+- Pengkodean Target Finder pada Widget Test (widget_test.dart) perbaikan yang dilakukan dengan mengubah pencarian teks dari 'Belum ada tugas' menjadi 'Tidak ada tugas', serta mengganti pencarian find.byType(PopupMenuButton) menjadi find.byIcon(Icons.more_vert). alasan karena AI menghasilkan kode tes berbasis template umum. Perbaikan dilakukan agar finder sesuai dengan konstanta string UI aktual dan menangani tipe generik `PopupMenuButton<TodoFilter>` yang tidak bisa ditangkap oleh type finder biasa.
