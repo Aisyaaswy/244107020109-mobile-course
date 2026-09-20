@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/comment_provider.dart';
+import '../data/network_errors.dart';
 
 class CommentPage extends ConsumerWidget {
   final int postId;
