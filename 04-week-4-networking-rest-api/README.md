@@ -12,7 +12,8 @@ Siapkan project
 ![screenshots](screenshots/persiapan_project.png)
 
 Susunan struktur folder
-![screenshots](screenshots/struktur_project.png)
+
+![screenshots](screenshots/struktur_folder.png)
 
 Membuat file post.dart sebagai model data untuk memetaka  JSON dari API menjadi objek Dart, api_client.dart sebagai konfigurasi HTTP client terpusat menggunakan Dio, dan post_repository.dart sebagai pintu masuk dan pengelola data (memanggil Dio untuk mengambil data endpoint /posts dan mengubah daftar JSON menjadi daftar list).
 
