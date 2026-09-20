@@ -14,18 +14,23 @@ class PostRepository {
         .toList();
   }
 
-    Future<List<Post>> fetchPostsPage({
-    required int page,
-    int limit = 10,
-    }) async {
-    final response = await _dio.get<List>(
-        '/posts',
-        queryParameters: {'_page': page, '_limit': limit},
-        );
-    final data = response.data ?? [];
-    return data
-        .whereType<Map<String, dynamic>>()
-        .map(Post.fromJson)
-        .toList();
-    }
+  Future<List<Post>> fetchPostsPage({
+  required int page,
+  int limit = 10,
+  }) async {
+  final response = await _dio.get<List>(
+      '/posts',
+      queryParameters: {'_page': page, '_limit': limit},
+      );
+  final data = response.data ?? [];
+  return data
+      .whereType<Map<String, dynamic>>()
+      .map(Post.fromJson)
+      .toList();
+  }
+
+  Future<Post> fetchPostById(int id) async {
+  final response = await _dio.get('/posts/$id');
+  return Post.fromJson(response.data);
+  }
 }

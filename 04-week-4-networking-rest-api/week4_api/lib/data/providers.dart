@@ -4,7 +4,6 @@ import 'dart:async';
 import 'api_client.dart';
 import 'models/post.dart';
 import 'repositories/post_repository.dart';
-import 'network_errors.dart';
 
 final dioProvider = Provider<Dio>((ref) => createDio());
 
@@ -74,3 +73,8 @@ Future<Object?> readPostsErrorOnce(ProviderContainer container) {
   );
   return completer.future.whenComplete(sub.close);
 }
+
+final postDetailProvider = FutureProvider.family<Post, int>((ref, id) async {
+  final repository = ref.watch(postRepositoryProvider);
+  return repository.fetchPostById(id);
+});

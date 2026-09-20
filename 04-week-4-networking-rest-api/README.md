@@ -106,3 +106,15 @@ test('fromJson aman saat menerima tipe data yang salah (mismatched type)', () {
     - Defensive Casting: 
     Menggunakan casting aman dengan fallback nilai bawaan (misalnya "as String? ?? ''" dan "as int? ?? 0") pada method fromJson untuk mencegah aplikasi crash akibat null value.
 
+### Refactoring dan testing
+
+####  Refactoring Challenge
+Lakukan refactoring berikut pada project API Anda, lalu commit dengan pesan yang jelas:
+
+1. Ekstrak widget baris post menjadi PostTile tersendiri agar ListView.builder pendek dan mudah diuji.
+2. Pindahkan friendlyErrorMessage ke file lib/data/network_errors.dart agar bisa dipakai ulang halaman paged dan non-paged.
+3. Tambahkan halaman detail post dengan GoRouter (/post/:id) yang menampilkan title dan body lengkap, state detail diambil dari list yang sudah dimuat atau via repository bila langsung dibuka.
+
+#### Testing unit test model + mock repository
+Buat test/post_test.dart, uji parsing aman null, mapping error, dan provider dengan repository palsu (tanpa internet):
+- 
