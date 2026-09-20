@@ -1,30 +1,66 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:week4_api/data/models/comment.dart';
+import 'package:week4_api/data/paged_posts.dart';
+import 'package:week4_api/pages/paged_post_page.dart';
 
-import 'package:week4_api/main.dart';
+class FakePagedPostsNotifier extends PagedPostsNotifier {
+  @override
+  PagedPostsState build() {
+    return const PagedPostsState();
+  }
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  // 1. Test render UI
+  testWidgets('PagedPostPage dapat dirender tanpa error', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pagedPostsProvider.overrideWith(() => FakePagedPostsNotifier()),
+        ],
+        child: const MaterialApp(
+          home: PagedPostPage(),
+        ),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Posts Paged'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  // 2. Unit Test: Kasus field hilang
+  test('fromJson harus menangani json dengan field yang hilang tanpa crash', () {
+    final Map<String, dynamic> incompleteJson = {
+      'postId': 1,
+      'id': 101,
+    };
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    final comment = Comment.fromJson(incompleteJson);
+
+    expect(comment.postId, equals(1));
+    expect(comment.id, equals(101));
+    expect(comment.name, equals(''));
+    expect(comment.email, equals(''));
+    expect(comment.body, equals(''));
+  });
+
+  // 3. Unit Test: Edge Case Tambahan (Tipe data tidak sesuai/mismatched)
+  test('fromJson aman saat menerima tipe data yang salah (mismatched type)', () {
+    final Map<String, dynamic> wrongTypeJson = {
+      'postId': 'bukan_integer',
+      'id': null,
+      'name': 12345,
+      'email': true,
+      'body': null,
+    };
+
+    final comment = Comment.fromJson(wrongTypeJson);
+
+    expect(comment.postId, equals(0));
+    expect(comment.id, equals(0));
+    expect(comment.name, equals(''));
+    expect(comment.email, equals(''));
+    expect(comment.body, equals(''));
   });
 }
