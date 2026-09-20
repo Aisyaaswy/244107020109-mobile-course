@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'pages/post_list_page.dart';
+import 'pages/paged_post_page.dart';
 import 'pages/post_detail_page.dart';
 
 final appRouter = GoRouter(
@@ -7,7 +7,7 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const PostListPage(),
+      builder: (context, state) => const PagedPostPage(),
     ),
     GoRoute(
       path: '/post/:id',

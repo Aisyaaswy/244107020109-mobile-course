@@ -44,3 +44,36 @@ Dokumen ini berisi catatan perbaikan dan penyesuaian yang dilakukan terhadap kod
 | **`baseUrl` & timeout terpusat** | ✅ Lolos | Terpusat melalui `createDio()` pada `lib/data/api_client.dart`. |
 | **Unit test menguji edge case** | ✅ Lolos | Menguji kasus *field* hilang dan tipe data yang tidak sesuai (*mismatched types*). |
 | **`flutter analyze` & `flutter test`** | ✅ Lolos | Lolos tanpa error atau warning (**No issues found!** & **All tests passed!**). |
+
+---
+
+# Dokumentasi Verifikasi Proyek dan Hasil AI
+
+Dokumen ini berisi catatan verifikasi hasil generasi AI, pengujian sistem, dan pemenuhan checklist kriteria pada proyek **`week4_api`**.
+
+## 1. Verifikasi Checklist Kriteria Proyek
+
+| Kriteria / Checklist | Status | Catatan Implementasi |
+| :--- | :---: | :--- |
+| **Separasi Repository & Provider** | **Lulus** | UI tidak memanggil `Dio` secara langsung. Semua akses data dikapsulasi melalui `PostRepository` dan diakses UI menggunakan Riverpod (`postRepositoryProvider`). |
+| **Penanganan 4 State UI** | **Lulus** | Halaman UI mengelola state `Loading` (spinner), `Error` (+ tombol retry/coba lagi), `Empty` (pesan data kosong), dan `Success` (menampilkan list data). |
+| **Fitur Pagination** | **Lulus** | Paging berjalan menggunakan `fetchPostsPage(page, limit)` via `Notifier`. Menggunakan `ScrollController` untuk *infinite scroll*, mencegah *request* ganda saat loading, dan menampilkan indikator akhir data. |
+| **Analisis Sintaks (`flutter analyze`)** | **Lulus** | Kode bersih dari warning dan error (`No issues found!`). Perbaikan *linter* seperti `unnecessary_underscores` telah diselesaikan. |
+| **Pengujian Unit & Widget (`flutter test`)** | **Lulus** | Seluruh pengujian pada folder `test/` lulus tanpa kendala (`All tests passed!`). |
+
+---
+
+## 2. Ringkasan Refactoring & Perbaikan AI
+
+Selama proses pengembangan, beberapa penyesuaian dilakukan terhadap kode yang dihasilkan AI untuk memastikan kesesuaian dengan versi paket terbaru dan kebutuhan proyek:
+
+1. **Pembaruan State Management (Riverpod 2.x+)**:
+   - Memperbarui pola `StateNotifier` menjadi `Notifier` bawaan Riverpod pada `PagedPostsNotifier` untuk menghindari error peninggalan class (*deprecated/non-class*).
+2. **Koreksi Rute Navigasi (`router.dart`)**:
+   - Memastikan rute utama (`/`) mengarah ke `PagedPostPage` agar fitur *pagination* aktif sebagai halaman utama.
+3. **Pemberian Parametr UI `PostTile`**:
+   - Mengintegrasikan widget kustom `PostTile` ke dalam `PagedPostPage` agar komponen judul dan bodi post dapat ditampilkan secara utuh.
+4. **Pembersihan Linter & Warning**:
+   - Memperbaiki penulisan parameter `error` pada callback state async untuk memenuhi standar linter Dart.
+
+---

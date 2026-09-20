@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/paged_posts.dart';
 import '../data/network_errors.dart';
+import '../widgets/post_tile.dart';
 
 class PagedPostPage extends ConsumerStatefulWidget {
   const PagedPostPage({super.key});
@@ -55,6 +56,14 @@ class _PagedPostPageState
         ),
       );
     }
+    if (!state.isLoading && state.items.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Posts Paged')),
+        body: const Center(
+          child: Text('Belum ada data post.'),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Posts Paged')),
       body: ListView.builder(
@@ -75,12 +84,7 @@ class _PagedPostPageState
             );
           }
           final post = state.items[index];
-          return ListTile(
-            leading: CircleAvatar(
-                child: Text(post.id.toString())),
-            title: Text(post.title,
-                maxLines: 1, overflow: TextOverflow.ellipsis),
-          );
+          return PostTile(post: post);
         },
       ),
     );

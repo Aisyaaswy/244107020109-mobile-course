@@ -115,6 +115,51 @@ Lakukan refactoring berikut pada project API Anda, lalu commit dengan pesan yang
 2. Pindahkan friendlyErrorMessage ke file lib/data/network_errors.dart agar bisa dipakai ulang halaman paged dan non-paged.
 3. Tambahkan halaman detail post dengan GoRouter (/post/:id) yang menampilkan title dan body lengkap, state detail diambil dari list yang sudah dimuat atau via repository bila langsung dibuka.
 
-#### Testing unit test model + mock repository
-Buat test/post_test.dart, uji parsing aman null, mapping error, dan provider dengan repository palsu (tanpa internet):
-- 
+#### Checklist verifikasi mandiri
+- UI tidak memanggil Dio langsung, semua akses data lewat repository + provider.
+  - pada tampilan halaman web pengguna hanya melihat teks, tombol, dan spinner loading. 
+- Empat state tampil benar: loading, error (+ retry), empty, success.
+  - loading
+  ![screenshots](screenshots/loading.png)
+  - error
+  ![screenshots](screenshots/error.png)
+    - retry
+    ![screenshots](screenshots/retry.png)
+  - empty
+  ![screenshots](screenshots/empty.png)
+  - success
+  ![screenshots](screenshots/retry.png)
+- Pagination: data bertambah saat scroll, tidak ada request ganda, ada indikator akhir data. flutter analyze tanpa issue dan semua test lulus.
+  - data bertambah saat scroll
+  ![screenshots](screenshots/tambah_data.png)
+  - indikator akhir data
+  ![screenshots](screenshots/indikator.png)
+  - flutter analyze
+  ![screenshots](screenshots/flutter_test.png)
+- Hasil AI diverifikasi dan didokumentasikan pada folder docs/.
+
+### Refleksi
+1. Mengapa UI dilarang memanggil Dio langsung? Apa yang rusak jika aturan ini dilanggar?
+  - UI dilarang memanggil Dio langsung karena melanggar prinsip Separation of Concerns (pemisahan tanggung jawab). UI bertugas menampilkan data dan menerima input pengguna, bukan mengurus protokol HTTP, konversil URL atau penanganan respons jaringan.
+  - jika dilanggar yang rusak:
+    - kemudahan pengujian, UI menjadi sangat sulit atau bahkan tidak bisa diuji secara mandiri tanpa bergantung pada koneksi internet atau server asli.
+    - kode berulang, konfigurasi seperti URL dasar,, header autentikasi, dan penanganan token harus ditulis berulang kali di berbagai widget.
+    - skalabilitas, jika ada perubahan struktur API atau library HTTP diganti, harus mengedit seluruh file UI satu per satu.
+2. Kapan pagination client-side cukup, dan kapan harus mengandalkan pagination server (_page/_limit)?
+  - pagination client-side cukup ketika jumlah total data tergolong sedikit dan pasti, data perlu difilter, diurutkan atau dicari secara instan tanpa tunda waktu respons jaringan, ukuran bebad paylad JSON sangat kecil sehingga aman diunduh sekaligus saat aplikasi dibuka.
+  - harus pagination server jika jumlah data sangat besar, dinammis, atau tidak terbatas, dapat mengehemat penggunaan kuota data penggunaan dan mengurangi waktu muat awal, dan mencegah RAM membengkak atau mengalami lag akibat menampung terlalu banyak objek sekaligus.
+3. Bagaimana exception repository berubah menjadi AsyncError tanpa try/catch di setiap widget? Kapan try/catch eksplisit tetap dibutuhkan?
+  - exception repository berubah menjadi AsyncError tanpa try/catch di setiap widget ketika provider berbasis Riverpod (seperti FutureProvider atau AsyncNotifier) memanggil method repository yang melempar (throw) exception, Riverpod secara otomatis menangkap exception tersebut dan mengemasnya ke dalam object AsyncError(error, stackTrace). UI kemudian tinggal membaca statusnya secara deklaratif menggunakan method .when() atau AsyncValue.error.
+  - try/catch eksplisit tetap dibutuhkan pada event atau aksi imperatif pengguna—seperti menekan tombol simpan, hapus, atau login—karena aplikasi perlu menangkap error secara langsung saat itu juga untuk menampilkan umpan balik instan ke UI (seperti SnackBar atau Dialog) dan mencegah navigasi halaman berjalan jika operasi asinkron tersebut gagal. 
+4. Bagian mana dari hasil AI yang Anda perbaiki, dan mengapa?
+  - Penyesuaian StateNotifier ke Notifier (Riverpod 2.x+):
+    - Karena Sintaks awal AI menggunakan StateNotifier yang memicu error extends_non_class pada paket Riverpod versi terbaru. Kode diperbaiki menggunakan class Notifier dan NotifierProvider bawaan Riverpod terbaru.
+
+  - Perbaikan Rute Utama di router.dart:
+    - Karena AI awalnya mengarahkan rute utama / ke PostListPage (yang mengambil seluruh 100 data sekaligus). Rute ini diperbaiki ke PagedPostPage agar fitur pagination aktif sejak aplikasi pertama kali dibuka.
+
+  - Penggunaan Widget PostTile dan Subtitle di UI:
+    - Karena Tampilan daftar dari AI sempat kehilangan bagian bodi post karena hanya menggunakan ListTile dengan parameter title. Kode disesuaikan agar menyertakan subtitle atau menggunakan widget kustom PostTile yang telah disiapkan.
+
+  - Penanganan State Kosong (State Empty):
+    - Karena Ketika data bernilai kosong ([]), UI sempat salah menampilkan teks "Semua data termuat" alih-alih pesan khusus. Ditambahkan pengecekan state.items.isEmpty untuk merender tampilan "Belum ada data post.".

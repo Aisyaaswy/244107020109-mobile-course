@@ -8,7 +8,7 @@ import 'package:week4_api/pages/paged_post_page.dart';
 class FakePagedPostsNotifier extends PagedPostsNotifier {
   @override
   PagedPostsState build() {
-    return const PagedPostsState();
+    return PagedPostsState();
   }
 }
 
