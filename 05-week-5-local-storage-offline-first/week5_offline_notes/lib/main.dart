@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:week5_offline_notes/data/prefs.dart';
-import 'pages/notes_page.dart';
-import 'pages/settings_page.dart';
+import 'pages/settings_page.dart'; 
+import 'router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,17 +22,18 @@ class MainApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Memantau darkModeProvider yang ada di settings_page.dart
     final darkModeAsync = ref.watch(darkModeProvider);
 
     return darkModeAsync.when(
       data: (isDark) {
-        return MaterialApp(
+        return MaterialApp.router(
           title: 'Offline Notes',
           debugShowCheckedModeBanner: false,
           theme: ThemeData.light(useMaterial3: true),
           darkTheme: ThemeData.dark(useMaterial3: true),
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-          home: const NotesPage(),
+          routerConfig: appRouter,
         );
       },
       loading: () => const MaterialApp(

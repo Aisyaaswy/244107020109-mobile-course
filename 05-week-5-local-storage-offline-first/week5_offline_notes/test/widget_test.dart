@@ -1,30 +1,33 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:week5_offline_notes/main.dart';
+import 'package:week5_offline_notes/data/local/note.dart';
+import 'package:week5_offline_notes/widgets/note_tile.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('NoteTile menampilkan judul dan indicator dirty saat dirty == true',
+      (WidgetTester tester) async {
+    final note = Note(
+      title: 'Catatan Tes',
+      body: 'Isi catatan tes',
+      updatedAt: DateTime.now(),
+      dirty: true,
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: NoteTile(
+            note: note,
+            onDelete: () {},
+          ),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Verifikasi teks judul tampil
+    expect(find.text('Catatan Tes'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verifikasi teks indikator 'Belum tersinkron' atau ikon sync tampil
+    expect(find.text('Belum tersinkron'), findsOneWidget);
   });
 }

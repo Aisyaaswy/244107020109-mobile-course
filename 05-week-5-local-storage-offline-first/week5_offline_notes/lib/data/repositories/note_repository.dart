@@ -1,50 +1,91 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import '../local/db.dart';
 import '../local/note.dart';
 
 class NoteRepository {
-  NoteRepository({Future<Database> Function()? openDb})
-      : _openDb = openDb ?? openNotesDb;
+  final Future<Database> Function()? openDb;
 
-  final Future<Database> Function() _openDb;
+  NoteRepository({this.openDb});
 
-  Future<List<Note>> fetchNotes() async {
-    final db = await _openDb();
-    final rows = await db.query('notes', orderBy: 'updated_at DESC');
-    return rows.map(Note.fromMap).toList();
+  Future<Database> _getDb() async {
+    if (openDb != null) {
+      return await openDb!();
+    }
+    return await openNotesDb();
   }
 
-  Future<Note> addNote({required String title, String body = ''}) async {
-    final db = await _openDb();
+  /// Membaca semua catatan dari database lokal
+  Future<List<Note>> fetchNotes() async {
+    final db = await _getDb();
+    final maps = await db.query('notes', orderBy: 'updated_at DESC');
+    return maps.map((map) => Note.fromMap(map)).toList();
+  }
+
+  /// Menambah catatan baru
+  Future<int> addNote({required String title, String body = ''}) async {
+    final db = await _getDb();
     final note = Note(
       title: title,
       body: body,
       updatedAt: DateTime.now(),
       dirty: true,
     );
-    final id = await db.insert('notes', note.toMap());
-    return Note(
-      id: id,
-      title: note.title,
-      body: note.body,
-      updatedAt: note.updatedAt,
-      dirty: true,
+    return await db.insert('notes', note.toMap());
+  }
+
+  /// Menghapus catatan
+  Future<int> deleteNote(int id) async {
+    final db = await _getDb();
+    return await db.delete(
+      'notes',
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 
-  Future<void> deleteNote(int id) async {
-    final db = await _openDb();
-    await db.delete('notes', where: 'id = ?', whereArgs: [id]);
-  }
-
+  /// Menghitung jumlah catatan dirty
   Future<int> countDirty() async {
-    final db = await _openDb();
-    final rows = await db.rawQuery('SELECT COUNT(*) AS c FROM notes WHERE dirty = 1');
-    return ((rows.first['c'] as num?)?.toInt() ?? 0);
+    final db = await _getDb();
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM notes WHERE dirty = 1',
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 
-  Future<void> markAllSynced() async {
-    final db = await _openDb();
-    await db.update('notes', {'dirty': 0}, where: 'dirty = 1');
+  /// Membaca satu catatan spesifik berdasarkan ID
+  Future<Note?> getNoteById(int id) async {
+    final db = await _getDb();
+    final maps = await db.query(
+      'notes',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      return Note.fromMap(maps.first);
+    }
+    return null;
   }
 }
+
+// Provider Utama
+final noteRepositoryProvider = Provider<NoteRepository>((ref) {
+  return NoteRepository();
+});
+
+final notesProvider = FutureProvider<List<Note>>((ref) async {
+  final repository = ref.watch(noteRepositoryProvider);
+  return await repository.fetchNotes();
+});
+
+final dirtyCountProvider = FutureProvider<int>((ref) async {
+  final repository = ref.watch(noteRepositoryProvider);
+  return await repository.countDirty();
+});
+
+final noteDetailProvider = FutureProvider.family<Note?, int>((ref, id) async {
+  final repository = ref.watch(noteRepositoryProvider);
+  return await repository.getNoteById(id);
+});

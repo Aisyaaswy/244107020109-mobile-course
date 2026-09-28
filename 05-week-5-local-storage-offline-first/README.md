@@ -194,3 +194,41 @@ Sebelum merekomendasikan atau memutuskan opsi *storage*, dilakukan verifikasi te
 ## **REFACTORING, TESTING dan ERROR UMUM**
 ### **Refactoring Challenge**
 
+| Tantangan Refactoring | Bukti Tangkapan Layar | Deskripsi | Bukti Potongan Kode |
+|---|---|---|---|
+| Ekstrak Widget NoteTile | ![screenshots](screenshots/ekstrak_widget.jpeg)| Antarmuka daftar catatan yang menampilkan indikator "Belum tersinkron" | ![screenshots](screenshots/note_dirty.png)Blok kode `if (note.dirty)` pada file `lib/widgets/note_tile.dart` |
+| Pemisahan logika sync.dart | ![screenshots](screenshots/sync.png) | Panel struktur direktori editor yang menampilkan file `lib/data/sync.dart` | ![screenshots](screenshots/dirty_notes.png) ![screenshots](screenshots/load.png) Fungsi `syncDirtyNotes` dan `loadPostsCacheFirst` pada file `sync.dart` |
+| Halaman detail GoRouter | ![screenshots](screenshots/gorouter.jpeg) | Antarmuka halaman detail catatan saat menekan salah satu item | Definisi rute pada [router.dart](week5_offline_notes/lib/router.dart) dan `ref.watch` pada [note_detail_page.dart](week5_offline_notes/lib/pages/note_detail_page.dart) |
+
+### **Checklist Verifikasi Mandiri**
+
+1. **Pemisahan Logika Akses Data**: Antarmuka pengguna tidak memanggil SQLite atau SharedPreferences secara langsung, melainkan seluruh akses data dikelola sepenuhnya melalui repository dan provider.
+
+2. **Fungsionalitas Mode Luring**: Aplikasi dapat berfungsi secara penuh dalam mode pesawat, di mana proses membaca, menambah, serta menghapus catatan berjalan lancar tanpa koneksi internet.
+
+3. **Indikator Sinkronisasi**: Badge indikator dirty menampilkan jumlah catatan yang belum tersinkronisasi secara akurat sebelum dan sesudah proses sinkronisasi dilakukan.
+
+4. **Penyimpanan Cache Data API**: Halaman Cached Posts berhasil menampilkan data yang bersumber dari API dan tersimpan di database lokal saat perangkat berada dalam kondisi offline.
+
+5. **Flutter test** tanpa issue ![screenshots](screenshots/flutter_test.png)
+
+## **Tugas, refleksi, dan referensi**
+
+| Keterangan | Bukti Tangkapan Layar | 
+|---|---|
+| Light mode | ![screenshots](screenshots/force_offline_off.jpeg) |
+| Dark mode | ![screenshots](screenshots/darkmode.jpeg) |
+| Sebelum Sync | ![screenshots](screenshots/dirty_notes_offline.jpeg) |
+| Setelah Sync | ![screenshots](screenshots/sync_success.jpeg) |
+| Detail | ![screenshots](screenshots/gorouter.jpeg) |
+
+### **Refleksi**
+
+1. Mengapa daftar catatan tidak boleh disimpan di SharedPreferences? Apa yang rusak jika aturan ini dilanggar?
+    - SharedPreferences hanya dirancang untuk menyimpan data kecil seperti status mode gelap atau preferensi aplikasi. Tempat ini tidak cocok untuk menyimpan data berstruktur seperti daftar catatan. Jika aturan ini dilanggar, aplikasi akan menjadi sangat lambat saat jumlah catatan bertambah karena seluruh data harus dibaca sekaligus ke memori. Anda juga tidak bisa melakukan pencarian atau pengurutan data secara efisien. Selain itu, catatan sangat rentan hilang atau rusak total jika aplikasi mendadak crash saat proses penyimpanan sedang berlangsung.
+2. Kapan cache-first cukup, dan kapan Anda membutuhkan strategi lain (misalnya network-first untuk data harga real-time)?
+    - Strategi cache-first cukup digunakan untuk data yang jarang berubah dan tetap berguna meskipun tidak up-to-date, seperti daftar catatan lokal, artikel berita lama, profil pengguna, atau riwayat transaksi. Strategi ini memprioritaskan kecepatan akses dan ketersediaan data secara offline dengan membaca data dari penyimpanan lokal terlebih dahulu sebelum memperbaruinya dari jaringan. Sebaliknya, Anda membutuhkan strategi lain seperti network-first saat menangani data sensitif yang membutuhkan tingkat akurasi tinggi dan harus selalu real-time, seperti harga saham, nilai tukar mata uang, sisa stok produk, atau status transaksi pembayaran. Jika strategi network-first gagal akibat koneksi terputus, aplikasi baru akan menampilkan data dari cache sebagai cadangan (fallback) dengan peringatan bahwa data yang ditampilkan adalah data lama.
+3. Bagaimana dirty flag berubah menjadi antrean sync tanpa memblokir UI? Kapan antrean terpisah (tabel outbox) menjadi perlu?
+    - Dirty flag berubah menjadi antrean sync tanpa memblokir UI dengan menjalankan proses sinkronisasi secara asinkron (asynchronous) di latar belakang (background). Ketika Anda menambah atau mengubah catatan, aplikasi langsung menyimpan data ke SQLite lokal dengan status dirty = true dan mengembalikan respon cepat ke layar. Setelah itu, provider memanggil fungsi sinkronisasi yang berjalan di luar main thread (UI thread). Aplikasi mengirimkan catatan berstatus dirty ke API satu per satu atau secara batch. Begitu server merespon sukses, nilai dirty flag pada database lokal diubah menjadi false (atau dirty = 0) dan UI diperbarui secara otomatis tanpa pernah mengalami freeze.
+4. Bagian mana dari rekomendasi AI yang Anda tolak, dan mengapa?
+    - Rekomendasi AI yang ditolak adalah saran untuk menguji FutureProvider secara langsung menggunakan perintah await provider.future atau expectLater saat menangani skenario error. Pendekatan ini ditolak karena pemanggilan await pada future yang melempar exception menyebabkan proses asinkron di Riverpod menggantung (hang), sehingga unit test mengalami kegagalan akibat TimeoutException selama 30 detik. Kegagalan tersebut juga berdampak pada proses pembersihan memori (container.dispose) yang memicu timbulnya StateError karena provider dipaksa tutup saat masih berada dalam status loading. Sebagai solusinya, pengujian dialihkan menggunakan pendekatan yang lebih stabil, yaitu memicu provider lewat container.listen, memberikan jeda pada event loop, lalu melakukan verifikasi status AsyncValue (state.hasError dan state.error) secara langsung tanpa menunggu future.

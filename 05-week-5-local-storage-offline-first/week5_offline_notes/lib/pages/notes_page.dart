@@ -1,19 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:week5_offline_notes/data/local/note.dart';
 import 'package:week5_offline_notes/data/repositories/note_repository.dart';
-import 'posts_page.dart';
-import 'settings_page.dart';
-
-final noteRepositoryProvider = Provider((ref) => NoteRepository());
-
-final notesProvider = FutureProvider<List<Note>>((ref) async {
-  return ref.watch(noteRepositoryProvider).fetchNotes();
-});
-
-final dirtyCountProvider = FutureProvider<int>((ref) async {
-  return ref.watch(noteRepositoryProvider).countDirty();
-});
+import '../widgets/note_tile.dart';
+import '../data/sync.dart';
+import 'package:go_router/go_router.dart';
 
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
@@ -27,14 +17,10 @@ class NotesPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Catatan Offline'),
         actions: [
-          // Tombol untuk membuka Halaman Posts API
           IconButton(
             icon: const Icon(Icons.article_outlined),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PostsPage()),
-              );
+              context.push('/posts');            
             },
           ),
           // Badge Indikator Status Sync
@@ -45,16 +31,16 @@ class NotesPage extends ConsumerWidget {
               child: IconButton(
                 icon: const Icon(Icons.cloud_upload_outlined),
                 onPressed: () async {
-                  final repo = ref.read(noteRepositoryProvider);
-                  final countDirty = await repo.countDirty();
-                  if (countDirty > 0) {
-                    await repo.markAllSynced();
+                  final syncService = SyncService();
+                  final countSynced = await syncService.syncDirtyNotes();
+
+                  if (countSynced > 0) {
                     ref.invalidate(notesProvider);
                     ref.invalidate(dirtyCountProvider);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('$countDirty catatan berhasil disinkronkan'),
+                          content: Text('$countSynced catatan berhasil disinkronkan'),
                         ),
                       );
                     }
@@ -63,16 +49,12 @@ class NotesPage extends ConsumerWidget {
               ),
             ),
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
-          // Tombol Ikon Gear untuk Buka Pengaturan
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
+              context.push('/settings');
             },
           ),
           const SizedBox(width: 8),
@@ -89,28 +71,13 @@ class NotesPage extends ConsumerWidget {
             itemCount: notes.length,
             itemBuilder: (context, index) {
               final note = notes[index];
-              return ListTile(
-                title: Text(note.title),
-                subtitle: Text(
-                  note.body.isNotEmpty ? note.body : 'Tidak ada isi',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (note.dirty)
-                      const Icon(Icons.sync_problem, color: Colors.orange, size: 20),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () async {
-                        await ref.read(noteRepositoryProvider).deleteNote(note.id!);
-                        ref.invalidate(notesProvider);
-                        ref.invalidate(dirtyCountProvider);
-                      },
-                    ),
-                  ],
-                ),
+              return NoteTile(
+                note: note,
+                onDelete: () async {
+                  await ref.read(noteRepositoryProvider).deleteNote(note.id!);
+                  ref.invalidate(notesProvider);
+                  ref.invalidate(dirtyCountProvider);
+                },
               );
             },
           );
