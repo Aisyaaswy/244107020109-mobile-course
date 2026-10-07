@@ -531,3 +531,9 @@ Hasil analisis kode:
 
     flutter analyze
     0 issues found
+
+#  **Tampilan Aplikasi**
+
+|Login page|Home page|Announcement page|
+| :--- | :--- | :--- |
+|![login](screenshots/login_page.jpeg)|![login](screenshots/home_page.jpeg) |![login](screenshots/announce_page.jpeg) |
