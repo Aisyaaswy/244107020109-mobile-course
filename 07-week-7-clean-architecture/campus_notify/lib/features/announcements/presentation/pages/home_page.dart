@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/auth_provider.dart';
-import '../routes.dart';
+import '../../../../messaging/push_service.dart';
+import '../../../../routes.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -13,8 +13,7 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  // Hanya 1 item pengumuman default
-  final List<Map<String, String>> _announcements = [
+  final List<Map<String, String>> _announcements = const [
     {
       'id': '1',
       'title': 'Pengumuman',
@@ -24,7 +23,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    FirebaseMessaging.instance.subscribeToTopic('pengumuman-kampus');
+    ref.read(pushServiceProvider).subscribeToTopic('pengumuman-kampus');
   }
 
   @override

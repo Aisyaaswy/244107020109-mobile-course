@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'auth_repository.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import 'token_store.dart';
 
-Dio buildApiClient(TokenStore store, AuthRepository auth) {
+Dio buildApiClient(TokenStore store, AuthRepositoryImpl auth) {
   final dio = Dio(BaseOptions(baseUrl: 'https://example-campus-api.test'));
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) async {
@@ -25,7 +25,7 @@ Dio buildApiClient(TokenStore store, AuthRepository auth) {
           );
           return handler.resolve(retry);
         } catch (_) {
-          await store.clear(); // refresh ikut mati -> paksa login ulang
+          await store.clear();
         }
       }
       handler.next(e);
@@ -37,5 +37,5 @@ Dio buildApiClient(TokenStore store, AuthRepository auth) {
 final apiClientProvider = Provider<Dio>((ref) {
   final tokenStore = ref.watch(tokenStoreProvider);
   final authRepo = ref.watch(authRepositoryProvider);
-  return buildApiClient(tokenStore, authRepo);
+  return buildApiClient(tokenStore, authRepo as AuthRepositoryImpl);
 });

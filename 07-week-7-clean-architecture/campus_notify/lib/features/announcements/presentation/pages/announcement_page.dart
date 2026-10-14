@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../routes.dart';
+import '../../../../routes.dart';
 
 class AnnouncementPage extends StatelessWidget {
   final String id;

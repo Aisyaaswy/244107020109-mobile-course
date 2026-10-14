@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../messaging/push_service.dart';
 import '../providers/auth_provider.dart';
-import '../messaging/push_service.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -27,11 +27,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           _passwordController.text,
         );
 
-    // Panggil PushService melalui Riverpod
     await ref.read(pushServiceProvider).initialize(
-      onNavigate: (route) {
-        // Logika navigasi jika ada payload
-      },
+      onNavigate: (route) {},
     );
   }
 

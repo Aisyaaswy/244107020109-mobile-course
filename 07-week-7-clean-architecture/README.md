@@ -7,23 +7,36 @@
 # **WEEK 7 - Clean Architecture**
 
 ## **Praktikum 1 - Audit layer project lama**
+### **1. Petakan file ke layer**
 
-Persiapan project
-![screenshots](screenshots/prepare1.jpeg)
-![screenshots](screenshots/prepare2.jpeg)
+| File | Layer saat ini | Masalah |
+| --- | --- | --- |
+| `lib/pages/home_page.dart` | presentation | Memanggil SDK `FirebaseMessaging.instance` secara langsung di `initState()` |
+| `lib/pages/announcement_page.dart` | presentation | Tidak ada masalah, hanya menerima parameter ID dan menampilkan UI |
+| `lib/pages/login_page.dart` | presentation | Menginisialisasi `PushService` langsung dari handler tombol UI |
+| `lib/providers/auth_provider.dart` | presentation (state) | Mengakses `FirebaseMessaging` langsung di method `logout()`, serta deklarasi `authRepositoryProvider` tercampur di file UI provider |
+| `lib/data/auth_repository.dart` | data (+kontrak tercampur) | Data model (`AuthSession`) dan implementasi repository digabung dalam satu file tanpa adanya kelas abstrak (interface) |
+| `lib/data/token_store.dart` | data | Tidak ada masalah secara fungsi, tetapi lokasi folder belum sesuai struktur core/network |
+| `lib/data/api_client.dart` | data | Tidak ada masalah logika, tetapi lokasi file belum dikelompokkan ke core/network |
+| `lib/messaging/push_service.dart` | infrastructure | Tidak ada masalah, sudah tepat memisahkan penanganan notifikasi dari UI |
 
-Struktur folder
+### **2. Tandai tiga pelanggaran klasik**
 
-![screenshots](screenshots/structure.jpeg)
+![screenshots](screenshots/pelanggaran.png)
 
-#### **Penyimpanan token yang aman**
+### **3. Gambar Struktur target**
+Untuk satu fitur (notes atau announcements):
 
-Membuat dan mengisi file token_store.dart, auth_repository.dart, api_client.dart, auth_provider.dart dan pengamanan GoRouter di main.dart
+## **Praktikum 2 - Domain dan data per fitur**
 
-**Tampilan pada apps**
-|homepage|announcement page|
-|---|---|
-|![screenshots](screenshots/homepage.png)|![screenshots](screenshots/announce.png)|
+
+
+
+
+
+
+
+
 
 ## **Praktikum 2 - FCM, permission, dan token lifecycle**
 

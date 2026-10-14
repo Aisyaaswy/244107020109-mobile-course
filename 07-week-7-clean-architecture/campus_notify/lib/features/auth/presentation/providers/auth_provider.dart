@@ -1,14 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import '../data/token_store.dart';
-import '../data/auth_repository.dart';
+import '../../../../core/network/token_store.dart';
+import '../../../../messaging/push_service.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 
-// Provider dasar
-final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
-final authRepositoryProvider =
-    Provider<AuthRepository>((ref) => AuthRepository());
-
-// Deklarasi authStateProvider
 final authStateProvider =
     AsyncNotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
 
@@ -33,7 +27,9 @@ class AuthNotifier extends AsyncNotifier<bool> {
   }
 
   Future<void> logout() async {
-    await FirebaseMessaging.instance.unsubscribeFromTopic('pengumuman-kampus');
+    await ref
+        .read(pushServiceProvider)
+        .unsubscribeFromTopic('pengumuman-kampus');
     await ref.read(tokenStoreProvider).clear();
     ref.invalidateSelf();
   }

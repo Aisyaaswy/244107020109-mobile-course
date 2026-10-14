@@ -3,18 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'messaging/push_service.dart';
-import 'pages/home_page.dart';
-import 'pages/login_page.dart';
-import 'pages/announcement_page.dart';
-import 'providers/auth_provider.dart';
-import 'routes.dart';
+
+// Import dari folder features & core baru
+import './features/announcements/presentation/pages/announcement_page.dart';
+import './features/announcements/presentation/pages/home_page.dart';
+import './features/auth/presentation/pages/login_page.dart';
+import './features/auth/presentation/providers/auth_provider.dart';
+import './features/notes/presentation/pages/notes_page.dart';
+import './messaging/push_service.dart';
+import './routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  // Registrasi Top-Level Background Handler
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   runApp(const ProviderScope(child: MyApp()));
@@ -49,6 +51,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           return AnnouncementPage(id: id);
         },
       ),
+      GoRoute(
+        path: AppRoutes.notes,
+        builder: (context, state) => const NotesPage(),
+      ),
     ],
   );
 });
@@ -64,8 +70,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    
-    // Inisialisasi PushService setelah frame pertama selesai dibangun
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final router = ref.read(routerProvider);
       ref.read(pushServiceProvider).initialize(
