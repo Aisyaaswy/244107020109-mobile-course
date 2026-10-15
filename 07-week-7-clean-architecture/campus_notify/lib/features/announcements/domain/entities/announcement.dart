@@ -1,6 +1,13 @@
 class Announcement {
+  const Announcement({
+    required this.id,
+    required this.title,
+    this.body = '',
+    required this.createdAt,
+  });
+
   final String id;
   final String title;
-
-  const Announcement({required this.id, required this.title});
+  final String body;
+  final DateTime createdAt;
 }

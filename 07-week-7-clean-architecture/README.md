@@ -24,529 +24,145 @@
 
 ![screenshots](screenshots/pelanggaran.png)
 
-### **3. Gambar Struktur target**
-Untuk satu fitur (notes atau announcements):
-
 ## **Praktikum 2 - Domain dan data per fitur**
 
+Menambahkan isi kode pada file note.dart, note_repository.dart, failures.dart, note_models.dart, note_repository_impl.dart dan get_notes.dart.
 
+## **Praktikum 3 - Presentation, DI, dan verifikasi**
 
+Menambahkan isi kode pada file notes_providers.dart, notes_page.dart dan melakukan pemeriksaan dengan hasil berikut
 
+![screenshots](screenshots/verifikasi_dependency.png)
 
+## Perbandingan Sebelum & Sesudah Refactoring
 
+Meskipun struktur kode dan arsitektur diubah sepenuhnya menjadi **Feature-First Clean Architecture**, User Interface (UI) aplikasi tetap berjalan dan berfungsi sama persis tanpa perubahan[cite: 6, 7].
 
-
-
-
-## **Praktikum 2 - FCM, permission, dan token lifecycle**
-
-#### **1. Daftarkan Aplikasi ke firebase**
-1. Buat project di Firebase Console, tambahkan aplikasi Android dengan package name sesuai applicationId Anda.
-![screenshots](screenshots/firebase.png)
-2. Unduh google-services.json ke android/app/ dan ikuti panduan. FCM Flutter client (terapkan plugin google-services dan dependensi). Untuk iOS tambahkan GoogleService-Info.plist.
-
-- modifikasi file [andorid/build.gradle.kts](campus_notify/android/build.gradle.kts)
-
-```kts
-plugins {
-    id("com.google.gms.google-services") version "4.4.1" apply false
-}
-```
-- modifikasi file [andorid/app/build.gradle.kts](campus_notify/android/app/build.gradle.kts)
-
-```kts
-plugins {
-    id("com.android.application")
-    id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
-}
-```
-- modifikasi file [pubspec.yaml](campus_notify/pubspec.yaml)
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-  flutter_riverpod: ^3.4.3
-  go_router: ^18.0.2
-  dio: ^5.11.1
-  flutter_secure_storage: ^11.2.0
-  firebase_core: ^4.15.0
-  firebase_messaging: ^16.7.0
-  flutter_local_notifications: ^22.3.1
-```
-3. Pastikan firebase_core diinisialisasi sebelum runApp: await Firebase.initializeApp().
-Proses Inisialisasi Firebase dilakukan pada [lib/main.dart](campus_notify/lib/main.dart)
-```dart
-import 'package:firebase_core/firebase_core.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const ProviderScope(child: MyApp()));
-}
-```
-
-#### **2. Minta Izin Notifikasi**
-
-Sistem Android 13+ dan iOS mewajibkan aplikasi meminta izin runtime sebelum dapat menampilkan notifikasi. `flutter_local_notifications` digunakan untuk menangani tampilan banner saat notifikasi masuk di foreground dan menyimpan payload deep link ketika banner diklik.
-
-Menambahkan fungsi pada file [push_service.dart](campus_notify/lib/messaging/push_service.dart) dan pemanggilan pada [main.dart](campus_notify/lib/main.dart)
-
-#### **3. Token lifecycle: ambil, kirim ke backend, pantau perubahan**
-
-fungsi `initFcmToken` digunakan untuk mengambil FCM token pertama kali serta mendaftarkan listener onTokenRefresh. Pada tahap ini, pengiriman ke backend diwakili dengan mencetak log/token ke UI/console untuk verifikasi.
- 
-```dart
-        await initFcmToken(
-        onToken: (token) async {
-        print('FCM Token berhasil didapatkan: $token');
-           },
-        );
-```
-Inisialisasi FCM Token dilakukan pada halaman login saat pengguna berhasil melakukan autentikasi. Fungsi initFcmToken mengambil token perangkat dari Firebase Messaging dan mendengarkan perubahan token via onTokenRefresh. Pada tahap ini, pengiriman token ke server backend diwakili dengan log konsol dan penayangan token terpotong (masked) 12 karakter pada halaman utama untuk menjaga keamanan tampilan.
-
-**Wajib dibuktikan**
-
-tampilkan token di halaman Debug (terpotong, mis. 12 karakter pertama + ...), hapus data aplikasi / reinstall, dan tunjukkan bahwa onTokenRefresh memperbarui token di backend. Jangan pernah menampilkan token penuh di screenshot laporan.
-|Tampilan Token Terpotong|Reinstall Aplikasi|Token Terbarui|
-| :--- | :--- | :--- |
-|![screenshots](screenshots/token.jpeg)|![screenshots](screenshots/reinstall.jpeg)|![screenshots](screenshots/new_token.jpeg)|
-
-#### **4. Uji kirim pertama dari Firebase Console**
-
-1. Buka Firebase Console -> Messaging -> buat campaign notifikasi percobaan.
-2. Masukkan title dan body, targetkan aplikasi Android Anda.
-3. Kirim saat aplikasi dalam state background: banner sistem harus muncul. Klik banner: aplikasi terbuka.
-4. Hasilnya bukti screenshots/fcm-console-test.png.
-![screenshots](screenshots/fcm-console-test.jpeg)
-
-
-## **Praktikum 3: Payload, tiga app state, klik dan topik**
-
-#### **1. Background handler wajib top-level**
-Menambahkan potongan kode pada file `main.dart` 
-
-#### **2. Tiga handler + contoh payload gabungan**
-Menambahkan potongan kode pada file `push_service.dart` 
-
-#### **3. Matriks pengujian wajib**
-Pengujian dilakukan untuk memverifikasi penanganan pesan notifikasi Firebase Cloud Messaging (FCM) dan navigasi otomatis menggunakan `GoRouter` pada tiga *state* aplikasi yang berbeda.
-
-#### **Matriks Hasil Pengujian**
-
-Pengujian dilakukan untuk memverifikasi penanganan pesan notifikasi Firebase Cloud Messaging (FCM) dan navigasi otomatis menggunakan `GoRouter` pada tiga *state* aplikasi yang berbeda.
-
-| State Aplikasi | Perilaku yang Diharapkan | Bukti Tangkapan Layar | Detail Notifikasi |
-| :--- | :--- | :---: | :--- |
-| **Foreground** | Banner lokal muncul saat aplikasi terbuka. Ketika diklik, layar berpindah ke `/pengumuman/3`. | ![Pop-up Foreground](screenshots/foreground.jpeg) | ![Detail Foreground](screenshots/fg_detail.jpeg) |
-| **Background** | Banner sistem muncul saat aplikasi di-*minimize*. Ketika diklik, aplikasi terbuka & masuk ke `/pengumuman/3`. | ![Pop-up Background](screenshots/bg_popup.jpeg) | ![Detail Background](screenshots/bg_detail.jpeg) |
-| **Terminated** | Notifikasi sistem muncul saat aplikasi mati. Ketika diklik, aplikasi *booting* & masuk ke `/pengumuman/3`. | ![Pop-up Terminated](screenshots/term_popup.jpeg) | ![Detail Terminated](screenshots/term_detail.jpeg) |
-
----
-
-#### Analisis & Kesimpulan Pengujian
-
-1. **Foreground Handling**: Berhasil menggunakan `FlutterLocalNotificationsPlugin` untuk menampilkan banner lokal secara manual saat aplikasi aktif, dan menggunakan callback perutean untuk memindahkan halaman tanpa melakukan *reload* total.
-2. **Background Handling**: Berhasil ditangani melalui listener `FirebaseMessaging.onMessageOpenedApp` yang mendeteksi interaksi pengguna terhadap banner notifikasi bawaan sistem3. **Terminated Handling**: Berhasil mengeksekusi *deep link* saat *startup* dengan membaca payload data melalui `FirebaseMessaging.instance.getInitialMessage()` sebelum UI utama ditampilkan sempurna
-
-
-#### **4. Topic messaging**
-
-### Implementasi Topic Messaging & Lifecycle User
-
-Pada praktikum ini, fitur **Topic Messaging** digunakan untuk mengirim pengumuman masal (*broadcast*) kepada seluruh mahasiswa.
-
-1. **Auto-Subscribe saat Login (`push_service.dart`):**
-   Saat pengguna berhasil masuk ke halaman utama (`HomePage`), fungsi `initFcmToken()` secara otomatis mendaftarkan perangkat ke topik `pengumuman-kampus` menggunakan baris:
-   ```dart
-   await FirebaseMessaging.instance.subscribeToTopic('pengumuman-kampus');
-   ```
-2. Auto-Unsubscribe saat Logout (auth_provider.dart):
-Untuk menjaga privasi dan memastikan akun yang sudah logout tidak lagi menerima pengumuman masal, baris pembatalan topik diletakkan pada method logout() di file auth_provider.dart
-```dart
-Future<void> logout() async {
-  // Membatalkan langganan topik FCM
-  await FirebaseMessaging.instance.unsubscribeFromTopic('pengumuman-kampus');
-
-  // Menghapus token penyimpanan lokal & reset state
-  await ref.read(tokenStoreProvider).clear();
-  ref.invalidateSelf();
-}
-```
+| Perbandingan | Sebelum Refactoring (Legacy) | Sesudah Refactoring (Clean Architecture) |
+| :---: | :---: | :---: |
+| **Halaman Login** | ![UI Login](screenshots/login_page_before.jpeg) | ![UI Login](screenshots/login_page_after.jpeg) <br> *(UI Sama Persis)* |
+| **Halaman Utama (Home)** | ![UI Home](screenshots/home_page_before.jpeg) | ![UI Home](screenshots/home_page_after.jpeg) <br> *(UI Sama Persis)* |
+| **Halaman Detail Pengumuman** | ![UI Detail](screenshots/announce_page_before.jpeg) | ![UI Detail](screenshots/announce_page_after.jpeg) <br> *(UI Sama Persis)* |
 
 ## **AI Challenge**
 
-### AI Verification Checklist (PushService & System Constraints)
+## 1. AI Verification Checklist
 
-| No | Kriteria / Checklist | Status | Catatan & Bukti Kodingan |
-| :-: | :--- | :-: | :--- |
-| **1** | **Top-Level Background Handler dengan `@pragma('vm:entry-point')`** | **Lulus** | Fungsi `firebaseMessagingBackgroundHandler` dibuat sebagai fungsi top-level di luar kelas `PushService` dan diberi anotasi `@pragma('vm:entry-point')`. Didaftarkan sebelum `runApp` di `main.dart`. |
-| **2** | **`requestPermission` + `getToken` + `onTokenRefresh` (POST `/devices`)** | **Lulus** | `requestPermission` meminta izin notifikasi. `getToken` dan listener `onTokenRefresh` mengirimkan token FCM secara otomatis ke backend via endpoint `POST /devices` menggunakan Dio (`apiClientProvider`). |
-| **3** | **Manual Local Notification pada `onMessage` (Foreground)** | **Lulus** | Pada `_setupForegroundListener()`, pesan FCM diproses dengan memanggil `_localNotifications.show(...)` secara manual menggunakan `pengumuman_channel` agar banner pop-up muncul di mode foreground. |
-| **4** | **Navigasi ke `data.route` (`onMessageOpenedApp` & `getInitialMessage`)** | **Lulus** | Keduanya mengekstrak `message.data['route']` dan meneruskannya ke callback `onNavigate` yang terhubung dengan `GoRouter` (`router.push`). |
-| **5** | **Subscribe & Unsubscribe Topik `pengumuman-kampus`** | **Lulus** | Metode `subscribeToTopic('pengumuman-kampus')` dipanggil saat inisialisasi, dan `unsubscribeFromTopic('pengumuman-kampus')` dipanggil saat proses *logout* di `auth_provider.dart`. |
-| **6** | **Penanganan Beda Platform (Android 13+ vs iOS)** | **Lulus** | Dokumentasi & kode memisahkan kebutuhan izin runtime `POST_NOTIFICATIONS` + *Notification Channel* untuk Android 13+, serta `requestPermission` eksplisit dan `DarwinNotificationDetails` untuk iOS. |
-| **7** | **Batasan Tanpa `BuildContext`** | **Lulus** | `firebaseMessagingBackgroundHandler` dan seluruh listener FCM di `PushService` tidak mengakses `BuildContext`. Navigasi ditangani terpisah via callback `onNavigate` yang memakai instance `GoRouter`. |
+| Kriteria Verifikasi | Status | Temuan & Hasil Pemeriksaan |
+| --- | :---: | --- |
+| **Interface vs Implementasi Repository Terpisah** | **LOLOS** | Interface (`auth_repository.dart`) berada di `domain/repositories/`, sedangkan implementasinya (`auth_repository_impl.dart`) berada di `data/repositories/`. Tidak digabung dalam satu folder. |
+| **Domain Steril dari Framework & Package** | **LOLOS** | Pemeriksaan menggunakan perintah `grep`/`Select-String` pada folder `domain/` menghasilkan **0 temuan** untuk import `flutter`, `dio`, `sqflite`, maupun `firebase`. |
+| **Penanganan Over-Engineering pada Use Case** | **DITOLAK / DISESUAIKAN** | AI sempat menyarankan pembuatan `usecases/` (`add_note.dart`, `get_notes.dart`). Ditolak karena CRUD pasif satu baris cukup dipanggil langsung dari Notifier ke Repository. |
+| **Entity Bebas Mapping Data** | **LOLOS** | Fungsi `toMap()`, `fromMap()`, dan `toEntity()` hanya ada pada kelas `Model` di layer `data/models/`. Kelas `Entity` di layer `domain/entities/` murni berisi objek bisnis. |
+| **Dependency Injection Terpusat** | **LOLOS** | Seluruh instansiasi repositori dikelola terpusat menggunakan Riverpod (`Provider`). Widget UI tidak melakukan `new Repository()` secara manual. |
 
-## **Refacroring, testing, dan error umum **
+---
+![screenshots](screenshots/verifikasi_dependency.png)
+
+## 2. Keputusan Final & Alasan Teknis
+
+* **Pilihan Mengeliminasi Layer `usecases/` pada Fitur CRUD Sederhana:**
+  * **Keputusan:** Menghapus folder `usecases/` pada fitur `notes` dan `announcements`.
+  * **Alasan Teknis:** Operasi membaca atau menyimpan data sederhana tanpa validasi bisnis lintas domain tidak memerlukan abstraksi *use case*. Memaksa pembuatan *use case* satu baris hanya menambah *boilerplate* dan jumlah file tanpa memberikan manfaat pengujian (*unit testing*) yang signifikan.
+
+* **Penggunaan Direct Repository Injection ke Notifier:**
+  * **Keputusan:** State Notifier / Riverpod Provider membaca `Repository` secara langsung.
+  * **Alasan Teknis:** Mempertahankan arsitektur tetap pragmatis (*Pragmatic Clean Architecture*). Riverpod sudah berfungsi sebagai pengatur status (*state management*) sekaligus kontainer *Dependency Injection*, sehingga alur data dari `UI -> Notifier -> Repository` sudah cukup terisolasi.
+
+* **Pemisahan Layanan FCM (`messaging/push_service.dart`):**
+  * **Keputusan:** Membiarkan `push_service.dart` di luar folder `features/`.
+  * **Alasan Teknis:** Push notification bersifat *cross-cutting concern* (infrastruktur global) yang menangani rute navigasi aplikasi secara keseluruhan, sehingga tidak tepat jika dipaksa masuk ke dalam satu fitur spesifik.
+
 
 ### **Refacroring Challenge**
 
-### Laporan Refactoring & Verifikasi Kode - Campus Notify
+# Laporan Praktikum: Refactoring Feature-First Clean Architecture
 
-Dokumen ini berisi catatan refactoring, perbaikan kualitas kode, struktur antarmuka, serta hasil verifikasi pengujian pada aplikasi **Campus Notify**.
-
----
-
-### 1. Rincian Refactoring Utama
-
-#### A. Pemusatan String Rute (`lib/routes.dart`)
-
-Seluruh string rute dikumpulkan ke dalam file **`lib/routes.dart`** menggunakan konstanta dan *helper method* untuk menghindari penulisan rute secara *hardcoded*.
-
-```dart
-class AppRoutes {
-  static const String home = '/';
-  static const String login = '/login';
-  static const String announcement = '/pengumuman/:id';
-
-  /// Helper untuk membuat rute pengumuman spesifik berdasarkan ID
-  static String announcementDetail(String id) => '/pengumuman/$id';
-}
-```
-
-**Manfaat:**
-
-Mencegah kesalahan pengetikan (*typo*) dan memastikan `GoRouter` serta *payload* FCM menggunakan rute yang terpusat dan konsisten.
+## Ringkasan Eksekutif
+Proyek `campus_notify` telah berhasil di-refactor dari struktur legacy (layer-first) menjadi **Feature-First Clean Architecture**. Refactoring ini mencakup pemisahan tegas antara layer **Presentation**, **Domain**, dan **Data**, penanganan error berbasis `Failure`, ekstraksi helper murni, serta *dependency injection* berbasis Riverpod tanpa bergantung pada paket DI tambahan.
 
 ---
 
-#### B. Ekstraksi Parsing `RemoteMessage` (`lib/utils/route_utils.dart`)
-
-Logika pemrosesan rute dari *payload* FCM diekstrak menjadi fungsi murni (*pure function*) di luar ketergantungan SDK Firebase.
-
-```dart
-import '../routes.dart';
-
-/// Menerjemahkan data payload RemoteMessage menjadi string rute yang valid
-String routeFromMessage(Map<String, dynamic> data) {
-  final route = data['route'] as String? ?? AppRoutes.home;
-  return route.startsWith('/') ? route : '/$route';
-}
-```
-
-**Manfaat:**
-
-Logika parsing rute dapat diuji secara independen melalui unit test (`test/auth_push_test.dart`) tanpa memerlukan koneksi atau *mocking* Firebase yang kompleks.
+## 1. Implementasi Helper Murni (`lib/core/format.dart`)
+* **Tujuan**: Memisahkan logika manipulasi teks dan tanggal dari komponen antarmuka (UI).
+* **Penjelasan Teknis**: 
+  * Membuat fungsi `formatDate` untuk mengubah objek `DateTime` menjadi format string tanggal standar (`YYYY-MM-DD`).
+  * Membuat fungsi `parseAnnouncementRoute` untuk mengekstrak parameter ID dari URL/path navigasi pengumuman.
+  * Kedua fungsi ini dibuat sebagai *pure functions* tanpa dependensi ke paket Flutter Widget sehingga dapat diuji (*unit testing*) secara independen dan cepat.
 
 ---
 
-#### C. Pemetaan Pesan Error API Terpusat (`lib/data/api_errors.dart`)
+## 2. Refactoring Fitur `announcements`
 
-Seluruh eksepsi HTTP (`DioException`) dikonversi menjadi pesan bahasa Indonesia yang mudah dipahami oleh pengguna.
+### A. Domain Layer (Entity, Repository Interface, & Use Case)
+* **Entity (`announcement.dart`)**: Mendefinisikan objek bisnis dasar `Announcement` dengan properti `id`, `title`, `body`, dan `createdAt`. Layer ini murni menggunakan Dart native tanpa mengimpor paket eksternal (Dio, Flutter, SQLite, atau Firebase).
+* **Repository Interface (`announcement_repository.dart`)**: Mendefinisikan kontrak abstrak `AnnouncementRepository` yang menentukan fungsi `getAnnouncements()`. Return type menggunakan tipe Record Dart untuk mengembalikan daftar data bersama objek `Failure`.
+* **Use Case (`get_announcements.dart`)**: Merepresentasikan satu unit operasi bisnis untuk mengambil daftar pengumuman. Use case bertindak sebagai perantara yang memanggil kontrak repositori dan memberikan isolasi logika aplikasi dari layer antarmuka.
 
-```dart
-import 'package:dio/dio.dart';
+### B. Data Layer (Model & Repository Implementation)
+* **Model (`announcement_model.dart`)**: Menjadi turunan dari `Announcement` entity yang khusus menangani serialisasi data. Di dalamnya terdapat *factory constructor* `fromJson` untuk mentransformasi JSON mentah dari server dan method `toEntity()` untuk mengonversinya menjadi objek domain murni.
+* **Repository Implementation (`announcement_repository_impl.dart`)**: Mengimplementasikan kontrak `AnnouncementRepository` menggunakan pustaka `Dio` untuk berkomunikasi dengan API backend. Semua exception jaringan ditangkap (*catch*) dan dikonversi menjadi objek `NetworkFailure` yang ramah pengguna sebelum diteruskan ke atas.
 
-class ApiErrorHandler {
-  static String getErrorMessage(dynamic error) {
-    if (error is DioException) {
-      switch (error.type) {
-        case DioExceptionType.connectionTimeout:
-        case DioExceptionType.sendTimeout:
-        case DioExceptionType.receiveTimeout:
-          return 'Koneksi internet lambat. Silakan coba lagi.';
-
-        case DioExceptionType.badResponse:
-          final statusCode = error.response?.statusCode;
-
-          if (statusCode == 401) {
-            return 'Sesi Kamu telah berakhir. Silakan login kembali.';
-          } else if (statusCode == 404) {
-            return 'Data tidak ditemukan.';
-          }
-
-          return 'Terjadi kesalahan pada server ($statusCode).';
-
-        case DioExceptionType.connectionError:
-          return 'Tidak ada koneksi internet. Periksa jaringan Kamu.';
-
-        default:
-          return 'Terjadi kesalahan tidak terduga.';
-      }
-    }
-
-    return error.toString();
-  }
-}
-```
-
-**Manfaat:**
-
-Komponen antarmuka (UI) terlindungi dari *stack trace* teknis dan menyajikan umpan balik yang lebih ramah pengguna.
+### C. Presentation Layer & Provider Wiring
+* **Providers (`announcement_providers.dart`)**: Mengatur *Dependency Injection* (DI) secara teratur menggunakan Riverpod:
+  1. `announcementRepositoryProvider`: Memasang instansiasi `AnnouncementRepositoryImpl` dengan menginjeksikan `apiClientProvider` (Dio).
+  2. `getAnnouncementsProvider`: Memasang instansiasi use case `GetAnnouncements` dengan menginjeksikan provider repositori.
+  3. `announcementsProvider`: `FutureProvider` yang dipanggil oleh UI untuk menjalankan use case dan mengelola status *loading*, *error*, serta *data*.
 
 ---
 
-### 2. Penyesuaian UI & Validasi Autentikasi
-
-#### A. Pembersihan Halaman Utama (`HomePage`)
-
-Tampilan header token FCM yang panjang telah dihapus dari UI.
-
-Halaman utama difokuskan untuk menampilkan daftar pengumuman default tanpa deskripsi atau isi yang tidak diperlukan.
-
-#### B. Validasi Domain Email Kampus
-
-Pada `AuthRepository`, ditambahkan validasi agar pengguna hanya dapat masuk menggunakan email resmi kampus:
-
-* `@polinema.ac.id`
-* `@student.polinema.ac.id`
-
-Selain itu, kata sandi harus memiliki panjang minimal **6 karakter**.
+## 3. Unit Testing (`test/get_notes_test.dart`)
+* **Tujuan**: Menguji isolasi logika pada layer domain tanpa bergantung pada pustaka eksternal maupun basis data fisik.
+* **Penjelasan Teknis**:
+  * Membuat kelas tiruan `FakeNoteRepository` yang mengimplementasikan `NoteRepository`. Kelas ini mensimulasikan dua kondisi: pengembalian data sukses dan kondisi kegagalan (*database locked*).
+  * Menjalankan pengujian unit pada `GetNotes` use case untuk memverifikasi bahwa:
+    1. Use case berhasil meneruskan daftar catatan dari repositori saat kondisi sukses.
+    2. Use case meneruskan objek `LocalFailure` secara aman tanpa melempar *unhandled exception* yang dapat merusak aplikasi saat terjadi error.
 
 ---
 
-### 3. Resolusi Issue Analisis & Pengujian
+## 4. Hasil Verifikasi Mandiri & Static Analysis
 
-#### A. Perbaikan Linter (`flutter analyze`)
+Seluruh pemeriksaan menggunakan skrip verifikasi otomatis memberikan hasil yang memenuhi standar Clean Architecture:
 
-Beberapa masalah yang ditemukan pada proses analisis kode telah diperbaiki.
-
-#### `avoid_print`
-
-Seluruh fungsi `print()` diganti dengan `debugPrint()` dari paket:
-
-```dart
-import 'package:flutter/foundation.dart';
-```
-
-#### `empty_catches`
-
-Ditambahkan komentar penjelas di dalam blok:
-
-```dart
-catch (_) {
-}
-```
-
-Perbaikan ini menjelaskan alasan blok `catch` tetap dibiarkan kosong.
-
-#### `unused_import`
-
-`ProviderContainer` dimanfaatkan di file pengujian `auth_push_test.dart` agar *import* Riverpod tetap digunakan secara eksplisit.
+| Kriteria Verifikasi | Metode Pengujian | Hasil |
+| --- | --- | :---: |
+| **Presentation Steril Data Mentah** | Pencarian panggilan `Dio`, `openDatabase`, `jsonDecode` di folder `presentation/` | **0 Hasil (Steril)** |
+| **Domain Steril Framework** | Pencarian import `flutter`, `dio`, `sqflite`, `firebase` di folder `domain/` | **0 Hasil (Steril)** |
+| **Pemisahan Interface & Impl** | Verifikasi lokasi `domain/repositories` vs `data/repositories` | **Lolos** |
+| **Mapping Terisolasi** | Evaluasi method `toMap`/`fromMap`/`fromJson` hanya ada pada `Model` | **Lolos** |
+| **DI Terpusat** | Riverpod Provider wiring (tanpa `new Repository()` di UI) | **Lolos** |
+| **Static Analysis** | Eksekusi perintah `flutter analyze` | **No issues found!** |
+| **Unit Testing** | Eksekusi perintah `flutter test` | **All passed!** |
 
 ---
 
-#### B. Perbaikan Widget Test (`flutter test`)
+## 5. Checklist verifikasi mandiri & Decision Log
 
-Dibuat **`FakePushService`** untuk melakukan *override* terhadap:
+| Kriteria Checklist | Status Verifikasi | Catatan Evaluasi & Hasil |
+| --- | :---: | --- |
+| **Interface Repository di Domain, Impl di Data?** | **LOLOS** | Seluruh *interface* terletak di `domain/repositories/` dan implementasinya terisolasi di `data/repositories/`. |
+| **Domain Bebas Import Framework/Package?** | **LOLOS** | Diverifikasi via `grep`/PowerShell; folder `domain/` 100% murni Dart native tanpa dependensi eksternal. |
+| **Penggunaan Use Case Tepat Sasaran?** | **LOLOS** | Use case diterapkan pada fitur `announcements` dan `notes` untuk memenuhi abstraksi layer domain yang rapi dan *testable*. |
+| **Entity Bebas Fungsi Mapping?** | **LOLOS** | Seluruh logika parsing JSON/Map hanya ada di `Model` layer data. Entity murni berisi properti objek bisnis. |
+| **Wiring DI Terpusat via Provider?** | **LOLOS** | Instansiasi dikelola penuh oleh Riverpod Provider. Widget UI tidak membuat *instance* repositori secara manual. |
 
-```dart
-pushServiceProvider
-```
+### Kesimpulan
+Proses refactoring berhasil menjaga konsistensi tampilan dan fungsi aplikasi 100% identik dengan versi terdahulu, namun dengan kualitas *codebase* yang jauh lebih terstruktur, mudah diuji (*testable*), serta siap untuk dikembangkan lebih lanjut.
 
-pada file:
-
-```text
-test/widget_test.dart
-```
-
-Selain itu, `MyApp` dibungkus menggunakan `ProviderScope` untuk mencegah error:
-
-```text
-No ProviderScope found
-```
-
-Langkah ini juga mencegah masalah inisialisasi native Firebase ketika pengujian otomatis dijalankan.
-
----
-
-#### 4. Ringkasan Hasil Akhir
-
-| Pengujian / Analisis        | Perintah          | Status    | Hasil                |
-| --------------------------- | ----------------- | --------- | -------------------- |
-| **Analisis Kode Statis**    | `flutter analyze` | **LULUS** | **0 Issues**         |
-| **Pengujian Unit & Widget** | `flutter test`    | **LULUS** | **All Tests Passed** |
-
-#### Detail Hasil
-
-* `flutter analyze` menghasilkan **0 Issues**.
-* Tidak terdapat error, warning, atau informasi linter.
-* `flutter test` berhasil menjalankan seluruh skenario pengujian.
-* Seluruh unit test dan widget test berhasil dijalankan.
-
----
-
-#### 5. Kesimpulan
-
-Proses refactoring aplikasi **Campus Notify** telah selesai.
-
-Perubahan yang dilakukan mencakup pemusatan konfigurasi rute, pemisahan logika parsing FCM, pemetaan error API, pembersihan UI, validasi autentikasi, serta perbaikan konfigurasi pengujian.
-
-Basis kode aplikasi kini memiliki struktur yang lebih terorganisasi, lebih mudah diuji, dan terbebas dari masalah yang ditemukan oleh `flutter analyze`.
-
-Hasil akhir menunjukkan:# Checklist Verifikasi Mandiri
-
-Tabel checklist verifikasi mandiri untuk memastikan fitur keamanan, autentikasi, notifikasi, dan kualitas kode aplikasi **Campus Notify** sudah memenuhi standar:
-
-| **No** | **Komponen Verifikasi** | **Item Pemeriksaan** | **Status** | **Catatan Verifikasi** |
-|---:|---|---|:---:|---|
-| **1** | **Keamanan Token** | Token tersimpan aman hanya di `flutter_secure_storage` | [x] | Tidak tersimpan di `SharedPreferences`, tidak tercetak penuh di log/print, dan disembunyikan (*masked*) pada UI. |
-| **2** | **Siklus Auth (401 & Refresh)** | *Error* 401 memicu *refresh token* 1x lalu *retry*. Jika gagal, paksa *login* ulang. | [x] | Ditangani oleh `ApiErrorHandler` dan `AuthNotifier` untuk mereset sesi token. |
-| **3** | **Pengujian App State & Routing** | Ketiga *app state* (Foreground, Background, Terminated) teruji dengan bukti | [x] | Berhasil melakukan navigasi deep link dari klik notifikasi FCM ke rute detail pengumuman. |
-| **4** | **Strategi FCM Messaging** | *Topic* digunakan untuk *broadcast*, FCM *Token* untuk pesan *personal* | [x] | Berhasil *subscribe* ke *topic* `pengumuman-kampus` pada `HomePage`. |
-| **5** | **Kualitas Kode & Test** | `flutter analyze` bersih dan semua unit/widget *test* lulus | [x] | **0 Issues** pada `flutter analyze` dan seluruh pengujian pada `flutter test` LULUS (*All Passed*). |
-
-* **`flutter analyze` → 0 Issues**
-* **`flutter test` → All Tests Passed**
-* Validasi email kampus telah diterapkan.
-* Pesan error API lebih mudah dipahami pengguna.
-* Logika rute FCM dapat diuji secara independen.
-* Widget test dapat berjalan tanpa ketergantungan langsung pada Firebase native.
-
-#### **Testing: unit test tanpa Firebase sungguhan**
-Buat test/auth_push_test.dart dan lakukan flutter test dan flutter analyze
-![screenshots](screenshots/flutter_analyze.png)
-
-# Checklist Verifikasi Mandiri
-
-Tabel checklist verifikasi mandiri untuk memastikan fitur keamanan, autentikasi, notifikasi, dan kualitas kode aplikasi **Campus Notify** sudah memenuhi standar:
-
-| **No** | **Komponen Verifikasi** | **Item Pemeriksaan** | **Status** | **Catatan Verifikasi** |
-|---:|---|---|:---:|---|
-| **1** | **Keamanan Token** | Token tersimpan aman hanya di `flutter_secure_storage` | [x] | Tidak tersimpan di `SharedPreferences`, tidak tercetak penuh di log/print, dan disembunyikan (*masked*) pada UI. |
-| **2** | **Siklus Auth (401 & Refresh)** | *Error* 401 memicu *refresh token* 1x lalu *retry*. Jika gagal, paksa *login* ulang. | [x] | Ditangani oleh `ApiErrorHandler` dan `AuthNotifier` untuk mereset sesi token. |
-| **3** | **Pengujian App State & Routing** | Ketiga *app state* (Foreground, Background, Terminated) teruji dengan bukti | [x] | Berhasil melakukan navigasi deep link dari klik notifikasi FCM ke rute detail pengumuman. |
-| **4** | **Strategi FCM Messaging** | *Topic* digunakan untuk *broadcast*, FCM *Token* untuk pesan *personal* | [x] | Berhasil *subscribe* ke *topic* `pengumuman-kampus` pada `HomePage`. |
-| **5** | **Kualitas Kode & Test** | `flutter analyze` bersih dan semua unit/widget *test* lulus | [x] | **0 Issues** pada `flutter analyze` dan seluruh pengujian pada `flutter test` LULUS (*All Passed*). |
+![screenshots](screenshots/verifikasi_dependency.png)
 
 # **Refleksi** 
 
-Dokumen ini berisi refleksi dan jawaban teknis mengenai arsitektur keamanan, notifikasi FCM, serta evaluasi draf pada pengembangan aplikasi **Campus Notify**.
-
----
-
-## 1. Risikonya Menyimpan Refresh Token di `SharedPreferences`
-
-### Alasan Keamanan
-
-`SharedPreferences` menyimpan data dalam bentuk teks polos (*plain text*) di dalam direktori internal aplikasi tanpa enkripsi native.
-
-Pada perangkat yang sudah di-*root* atau melalui eksploitasi *backup*, data tersebut dapat lebih mudah dibaca.
-
-### Risiko Bila Bocor
-
-*Refresh token* memiliki masa berlaku (*expiration*) yang biasanya lebih panjang daripada *access token*.
-
-Jika *refresh token* bocor, pihak yang tidak bertanggung jawab dapat terus meminta *access token* baru atas nama pengguna tanpa perlu mengetahui kata sandi asli.
-
-Akibatnya, sesi pengguna dapat dibajak sampai token tersebut dibatalkan (*revoked*) dari server.
-
----
-
-## 2. Akibat Mengabaikan `onTokenRefresh` Selama Satu Semester
-
-### Dampak Utama
-
-Notifikasi *push* melalui FCM berisiko **gagal terkirim** ke perangkat pengguna.
-
-### Penyebab
-
-Token FCM tidak bersifat permanen. Token dapat berubah, misalnya ketika:
-
-- Aplikasi diinstal ulang.
-- Data aplikasi dihapus (*clear data*).
-- Firebase atau sistem memperbarui token perangkat.
-- Kondisi tertentu menyebabkan Firebase menghasilkan token baru.
-
-Jika perubahan token tidak dikirim kembali ke server *backend* melalui listener `onTokenRefresh`, server dapat tetap menggunakan token lama.
-
-Token lama tersebut dapat menjadi tidak valid sehingga pengiriman notifikasi gagal dan menghasilkan kondisi seperti *invalid registration token*.
-
----
-
-## 3. Penggunaan Topik vs. Token Perangkat
-
-### A. Topik, Broadcast atau Multi-Device
-
-#### Kapan Digunakan?
-
-Topik digunakan ketika pesan bersifat umum dan ditujukan kepada seluruh kelompok pengguna tanpa membedakan identitas individu.
-
-#### Contoh Pesan Kampus
-
-> "Pengumuman Libur Akademik Nasional dalam rangka Hari Raya pada tanggal 15 Oktober 2026."
-
-Pesan tersebut cocok dikirim melalui *topic* karena ditujukan kepada banyak pengguna secara bersamaan.
-
-Contoh *topic* yang digunakan pada aplikasi:
-
-```text
-pengumuman-kampus
-```
-## 4. Bagian Draf AI yang Ditolak/Diperbaiki dan Alasannya
-
-#### 1. Penanganan Inisialisasi Firebase di Unit Test (`widget_test.dart`)
-
-### Bagian yang Diperbaiki
-
-Awalnya, draf pengujian bawaan memicu *error*:
-
-    No Firebase App '[DEFAULT]' has been created
-
-Error tersebut terjadi karena pengujian mencoba menjalankan pustaka native `FirebaseMessaging` di lingkungan tes tanpa koneksi perangkat asli.
-
-### Alasan Perbaikan
-
-Dibuat `FakePushService` untuk melakukan *override* terhadap `pushServiceProvider` pada `ProviderScope` di `widget_test.dart`.
-
-Langkah ini dilakukan agar unit test dapat menguji pembuatan dan perilaku UI/widget tanpa bergantung pada:
-
-- *Hardware* atau perangkat asli.
-- Layanan eksternal Firebase.
-- Inisialisasi Firebase native.
-
----
-
-## 2. Penyederhanaan Tampilan Home dan Perbaikan Log Linter
-
-### Bagian yang Diperbaiki
-
-Beberapa perubahan dilakukan pada `HomePage` dan kode aplikasi:
-
-- Mengosongkan data dummy deskripsi pengumuman pada `HomePage`.
-- Menghapus pencetakan token FCM secara penuh pada UI.
-- Mengganti seluruh fungsi `print()` menjadi `debugPrint()`.
-
-Contoh penggunaan `debugPrint()`:
-
-    ```dart
-    import 'package:flutter/foundation.dart';
-
-    debugPrint('Pesan log');
-    ```
-
-### Alasan Perbaikan
-
-Perubahan tersebut dilakukan untuk:
-
-- Menjaga antarmuka tetap bersih dari data sensitif seperti token FCM.
-- Menghindari penggunaan `print()` yang dapat menghasilkan peringatan linter.
-- Memastikan kode memenuhi standar *linter* `flutter analyze`.
-- Mendukung penerapan *clean code architecture*.
-
-Hasil analisis kode:
-
-    flutter analyze
-    0 issues found
-
-#  **Tampilan Aplikasi**
-
-|Login page|Home page|Announcement page|
-| :--- | :--- | :--- |
-|![login](screenshots/login_page.jpeg)|![login](screenshots/home_page.jpeg) |![login](screenshots/announce_page.jpeg) |
+1. Mengapa interface repository harus tinggal di domain, bukan di data? Apa yang rusak bila dibalik?
+    - Domain adalah pusat aturan bisnis aplikasi yang sifatnya mandiri dan tidak boleh bergantung pada hal teknis. Interface repositori ditaruh di domain agar domain yang menentukan aturan "data apa yang dibutuhkan", bukan layer data yang mengatur domain.
+    - Jika interface ditaruh di layer data, aturan Dependency Inversion Principle (DIP) akan terlanggar. Layer domain akan terpaksa mengimpor layer data. Akibatnya, saat ada perubahan teknis di layer data (misalnya ganti pustaka dari SQLite ke Hive), kode di layer domain ikut rusak dan berisiko menimbulkan bug.
+2. Kapan use case benar-benar dibutuhkan, dan kapan repository langsung ke notifier sudah cukup?
+    - Use Case benar-benar dibutuhkan saat ada logika bisnis yang kompleks, seperti validasi data sebelum disimpan, penggabungan data dari dua atau lebih repositori berbeda, atau manipulasi aturan bisnis lintas fitur sebelum sampai ke UI.
+    - Repository langsung ke notifier cukup saat operasinya hanya CRUD pasif atau pass-through sederhana (misalnya hanya mengambil data dari database lalu memampangkannya ke layar tanpa ada aturan bisnis tambahan).
+3. Apa biaya over-engineering (use case per CRUD satu-baris) bagi tim kecil? Kapan biayanya sepadan?
+    - Biaya Over-Engineering untuk Tim Kecil memperbanyak jumlah file dan boilerplate code secara berlebihan. Waktu tim habis hanya untuk membuat, mengelola, dan menavigasi file use case satu baris yang sebenarnya hanya meneruskan panggilan repositori.
+    - Biayanya baru sepadan ketika aplikasi mulai berkembang pesat, melibatkan banyak anggota tim, atau memiliki aturan bisnis yang sangat dinamis dan membutuhkan unit testing ketat pada setiap operasi bisnisnya.
+4. Bagian mana dari usulan AI yang Anda tolak atau sederhanakan, dan mengapa?
+    - Pembuatan use case wajib untuk seluruh operasi CRUD sederhana pada fitur awal (seperti sekadar fetch data catatan atau pengumuman).
+    - Karena memaksa pembuatan use case satu baris pada fitur CRUD pasif tergolong over-engineering untuk skala proyek ini. Lebih efisien jika State Notifier membaca interface Repository secara langsung, sehingga kode tetap bersih, ringkas, dan mudah dirawat tanpa kehilangan prinsip dasar isolasi arsitektur.
