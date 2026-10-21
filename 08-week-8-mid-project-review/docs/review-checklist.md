@@ -4,6 +4,6 @@
 
 | Pesan Commit Lama | Pesan Commit Baru (Conventional Commit) | Alasan Perubahan |
 | :--- | :--- | :--- |
-| `fix bug` | `fix(auth): cegah login saat input email kosong` | Menjelaskan secara spesifik bug apa yang diperbaiki dan lokasi komponennya |
-| `update` | `feat(notes): tambah validasi karakter minimal pada judul` | Mengubah pesan ambigu menjadi deskripsi fitur baru yang jelas |
-| `revisi ui` | `style(login): sesuaikan warna tombol dan padding form` | Menjelaskan perubahan tampilan UI tanpa mengubah logika kode |
+| `refactoring` | `refactor(auth): perbarui struktur provider dan token store` | Pesan lama terlalu umum, tidak menjelaskan kode bagian mana yang di-refactor |
+| `Tampilan` | `style(ui): perbarui tata letak halaman utama` | Pesan lama ambigu, tidak menggunakan kata kerja aksi dan tipe commit konvensional |
+| `last commit` | `fix(routing): perbaiki navigasi rute utama` | Pesan tidak deskriptif dan tidak memberikan informasi konteks perubahan kode |
