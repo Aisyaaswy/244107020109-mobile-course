@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../../../../core/failures.dart';
 import '../../domain/entities/announcement.dart';
 import '../../domain/repositories/announcement_repository.dart';
@@ -11,14 +12,16 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
 
   @override
   Future<({List<Announcement> announcements, Failure? failure})>
-      getAnnouncements() async {
+  getAnnouncements() async {
     try {
       final response = await _dio.get('/announcements');
       final data = response.data as List<dynamic>;
       final list = data
-          .map((item) =>
-              AnnouncementModel.fromJson(item as Map<String, dynamic>)
-                  .toEntity())
+          .map(
+            (item) =>
+                AnnouncementModel.fromJson(item as Map<String, dynamic>)
+                    .toEntity(),
+          )
           .toList();
       return (announcements: list, failure: null);
     } catch (e) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../messaging/push_service.dart';
 import '../providers/auth_provider.dart';
 
@@ -22,14 +23,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    await ref.read(authStateProvider.notifier).login(
-          _emailController.text,
-          _passwordController.text,
-        );
+    await ref
+        .read(authStateProvider.notifier)
+        .login(_emailController.text, _passwordController.text);
 
-    await ref.read(pushServiceProvider).initialize(
-      onNavigate: (route) {},
-    );
+    // Cek ketersediaan context/mounted setelah proses login async
+    if (!mounted) return;
+
+    await ref.read(pushServiceProvider).initialize(onNavigate: (route) {});
   }
 
   @override

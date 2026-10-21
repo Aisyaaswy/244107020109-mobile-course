@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/note_repository_impl.dart';
+
 import '../../domain/entities/note.dart';
 import '../../domain/repositories/note_repository.dart';
 import '../../domain/usecases/add_note.dart';
 import '../../domain/usecases/get_notes.dart';
 
+// Provider abstrak repository (tanpa mengimpor NoteRepositoryImpl di file provider ini)
 final noteRepositoryProvider = Provider<NoteRepository>((ref) {
-  return NoteRepositoryImpl(openDb: openNotesDb);
+  throw UnimplementedError('noteRepositoryProvider harus di-override di ProviderScope main.dart');
 });
 
 final getNotesProvider = Provider<GetNotes>((ref) {

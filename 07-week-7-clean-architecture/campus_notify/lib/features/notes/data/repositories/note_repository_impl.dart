@@ -1,5 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+
 import '../../../../core/failures.dart';
 import '../../domain/entities/note.dart';
 import '../../domain/repositories/note_repository.dart';
@@ -15,13 +16,18 @@ class NoteRepositoryImpl implements NoteRepository {
     try {
       final db = await openDb();
       final rows = await db.query('notes', orderBy: 'updated_at DESC');
-      final notes =
-          rows.map((r) => NoteModel.fromMap(r).toEntity()).toList();
+      final notes = rows.map((r) => NoteModel.fromMap(r).toEntity()).toList();
       return (notes: notes, failure: null);
-    } catch (e) {
+    } on DatabaseException catch (e) {
       return (
         notes: const <Note>[],
-        failure: LocalFailure('Gagal membaca catatan: $e'),
+        failure: LocalFailure('Gagal membaca catatan dari database: $e'),
+      );
+    } catch (e) {
+      // Tangkap error tak terduga lainnya
+      return (
+        notes: const <Note>[],
+        failure: LocalFailure('Terjadi kesalahan tidak terduga: $e'),
       );
     }
   }
@@ -37,24 +43,37 @@ class NoteRepositoryImpl implements NoteRepository {
       final id = await db.insert(
         'notes',
         NoteModel(
-            title: title, body: body, updatedAt: now, dirty: true)
-            .toMap(),
+          title: title,
+          body: body,
+          updatedAt: now,
+          dirty: true,
+        ).toMap(),
       );
       return (
         note: Note(
-            id: id, title: title, body: body, updatedAt: now, dirty: true),
+          id: id,
+          title: title,
+          body: body,
+          updatedAt: now,
+          dirty: true,
+        ),
         failure: null,
+      );
+    } on DatabaseException catch (e) {
+      return (
+        note: null, 
+        failure: LocalFailure('Gagal menyimpan catatan ke database: $e'),
       );
     } catch (e) {
       return (
-        note: null,
-        failure: LocalFailure('Gagal menyimpan catatan: $e')
+        note: null, 
+        failure: LocalFailure('Terjadi kesalahan tidak terduga: $e'),
       );
     }
   }
 }
 
-// Pindahkan openNotesDb ke sini (Layer Data)
+// Fungsi openNotesDb tetap berada di layer Data
 Future<Database> openNotesDb() async {
   final dbPath = await getDatabasesPath();
   final path = join(dbPath, 'notes.db');

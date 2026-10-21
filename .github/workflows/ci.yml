@@ -1,0 +1,18 @@
+name: ci
+on: [pull_request]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # Masuk ke folder proyek minggu 8 sebelum menjalankan test
+      - name: Run analyze & test on Week 8
+        run: |
+          cd 08-week-8-mid-project-review
+          flutter analyze
+          flutter test

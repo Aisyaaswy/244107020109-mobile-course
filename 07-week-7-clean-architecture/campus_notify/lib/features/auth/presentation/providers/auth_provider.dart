@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/network/token_store.dart';
 import '../../../../messaging/push_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 
-final authStateProvider =
-    AsyncNotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
+final authStateProvider = AsyncNotifierProvider<AuthNotifier, bool>(
+  AuthNotifier.new,
+);
 
 class AuthNotifier extends AsyncNotifier<bool> {
   @override

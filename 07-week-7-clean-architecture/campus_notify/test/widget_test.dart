@@ -18,9 +18,7 @@ void main() {
   testWidgets('MyApp renders successfully', (WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          pushServiceProvider.overrideWithValue(FakePushService()),
-        ],
+        overrides: [pushServiceProvider.overrideWithValue(FakePushService())],
         child: const MyApp(),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../providers/auth_provider.dart';
 import '../messaging/push_service.dart';
 
@@ -36,15 +37,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return;
     }
 
-    await ref.read(authStateProvider.notifier).login(
-          email,
-          password,
-        );
+    await ref.read(authStateProvider.notifier).login(email, password);
 
-    await ref.read(pushServiceProvider).initialize(
-      onNavigate: (route) {
-      },
-    );
+    await ref.read(pushServiceProvider).initialize(onNavigate: (route) {});
   }
 
   @override

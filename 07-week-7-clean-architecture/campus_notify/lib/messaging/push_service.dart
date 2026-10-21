@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../core/network/api_client.dart';
 import '../routes.dart';
 
@@ -23,26 +24,26 @@ class PushService {
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
-PushService(this._ref);
+  PushService(this._ref);
 
-String? _initialRoute;
-String? get initialRoute => _initialRoute;
+  String? _initialRoute;
+  String? get initialRoute => _initialRoute;
 
-Future<void> initialize({required Function(String route) onNavigate}) async {
-  await requestPermission();
+  Future<void> initialize({required Function(String route) onNavigate}) async {
+    await requestPermission();
 
-  await _initLocalNotifications(onNavigate);
+    await _initLocalNotifications(onNavigate);
 
-  await _setupTokenManagement();
+    await _setupTokenManagement();
 
-  _setupForegroundListener();
-  _setupBackgroundOpenedListener(onNavigate);
-  await _setupTerminatedListener(onNavigate);
+    _setupForegroundListener();
+    _setupBackgroundOpenedListener(onNavigate);
+    await _setupTerminatedListener(onNavigate);
 
-  await subscribeToTopic('pengumuman-kampus');
-}
+    await subscribeToTopic('pengumuman-kampus');
+  }
 
-Future<void> requestPermission() async {
+  Future<void> requestPermission() async {
     // iOS: Membutuhkan izin eksplisit dari user lewat FCM requestPermission.
     // Android 13+ (API 33+): Membutuhkan izin POST_NOTIFICATIONS di AndroidManifest.xml
     // serta dialog izin runtime yang dipicu oleh kode di bawah ini.
@@ -56,7 +57,7 @@ Future<void> requestPermission() async {
     debugPrint('User granted permission: ${settings.authorizationStatus}');
   }
 
-Future<void> _setupTokenManagement() async {
+  Future<void> _setupTokenManagement() async {
     String? token = await _fcm.getToken();
     if (token != null) {
       await _sendTokenToBackend(token);
@@ -67,22 +68,20 @@ Future<void> _setupTokenManagement() async {
     });
   }
 
-Future<void> _sendTokenToBackend(String token) async {
-  try {
-    final dio = _ref.read(apiClientProvider);
-    
-    await dio.post(
-      '/devices', 
-      data: {
-        'token': token,
-        'device_type': 'flutter_app',
-      },
-    );
-  } catch (_) {
-    
+  Future<void> _sendTokenToBackend(String token) async {
+    try {
+      final dio = _ref.read(apiClientProvider);
+
+      await dio.post(
+        '/devices',
+        data: {'token': token, 'device_type': 'flutter_app'},
+      );
+    } catch (_) {}
   }
-}
-Future<void> _initLocalNotifications(Function(String route) onNavigate) async {
+
+  Future<void> _initLocalNotifications(
+    Function(String route) onNavigate,
+  ) async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const iosInit = DarwinInitializationSettings(
@@ -115,7 +114,8 @@ Future<void> _initLocalNotifications(Function(String route) onNavigate) async {
 
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(androidChannel);
   }
 
@@ -161,7 +161,9 @@ Future<void> _initLocalNotifications(Function(String route) onNavigate) async {
   }
 
   // TERMINATED: Aplikasi mati total dan dibuka lewat notifikasi
-  Future<void> _setupTerminatedListener(Function(String route) onNavigate) async {
+  Future<void> _setupTerminatedListener(
+    Function(String route) onNavigate,
+  ) async {
     RemoteMessage? initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
       String? route = initialMessage.data['route'];

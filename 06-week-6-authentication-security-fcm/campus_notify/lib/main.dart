@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'messaging/push_service.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
@@ -64,15 +65,17 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    
+
     // Inisialisasi PushService setelah frame pertama selesai dibangun
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final router = ref.read(routerProvider);
-      ref.read(pushServiceProvider).initialize(
-        onNavigate: (route) {
-          router.push(route);
-        },
-      );
+      ref
+          .read(pushServiceProvider)
+          .initialize(
+            onNavigate: (route) {
+              router.push(route);
+            },
+          );
     });
   }
 

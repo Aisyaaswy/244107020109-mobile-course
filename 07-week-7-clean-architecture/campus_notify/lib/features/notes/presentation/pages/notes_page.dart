@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/entities/note.dart';
 import '../providers/notes_providers.dart';
 
@@ -11,13 +12,9 @@ class NotesPage extends ConsumerWidget {
     final state = ref.watch(notesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Catatan'),
-      ),
+      appBar: AppBar(title: const Text('Catatan')),
       body: state.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorView(
           message: '$e',
           onRetry: () => ref.invalidate(notesProvider),
@@ -31,11 +28,7 @@ class NotesPage extends ConsumerWidget {
 }
 
 class ErrorView extends StatelessWidget {
-  const ErrorView({
-    super.key,
-    required this.message,
-    required this.onRetry,
-  });
+  const ErrorView({super.key, required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
@@ -54,10 +47,7 @@ class ErrorView extends StatelessWidget {
               style: const TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('Coba Lagi'),
-            ),
+            ElevatedButton(onPressed: onRetry, child: const Text('Coba Lagi')),
           ],
         ),
       ),
@@ -66,10 +56,7 @@ class ErrorView extends StatelessWidget {
 }
 
 class NotesList extends StatelessWidget {
-  const NotesList({
-    super.key,
-    required this.notes,
-  });
+  const NotesList({super.key, required this.notes});
 
   final List<Note> notes;
 
@@ -81,10 +68,7 @@ class NotesList extends StatelessWidget {
         final note = notes[index];
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: ListTile(
-            title: Text(note.title),
-            subtitle: Text(note.body),
-          ),
+          child: ListTile(title: Text(note.title), subtitle: Text(note.body)),
         );
       },
     );

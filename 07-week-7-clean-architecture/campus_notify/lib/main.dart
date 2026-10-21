@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
-// Import dari folder features & core baru
+import './features/notes/data/repositories/note_repository_impl.dart';
+import './features/notes/presentation/providers/notes_providers.dart';
 import './features/announcements/presentation/pages/announcement_page.dart';
 import './features/announcements/presentation/pages/home_page.dart';
 import './features/auth/presentation/pages/login_page.dart';
@@ -19,7 +19,16 @@ void main() async {
 
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        noteRepositoryProvider.overrideWithValue(
+          NoteRepositoryImpl(openDb: openNotesDb),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -73,11 +82,13 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final router = ref.read(routerProvider);
-      ref.read(pushServiceProvider).initialize(
-        onNavigate: (route) {
-          router.push(route);
-        },
-      );
+      ref
+          .read(pushServiceProvider)
+          .initialize(
+            onNavigate: (route) {
+              router.push(route);
+            },
+          );
     });
   }
 

@@ -1,16 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
 import '../data/token_store.dart';
 import '../data/auth_repository.dart';
 
 // Provider dasar
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore());
-final authRepositoryProvider =
-    Provider<AuthRepository>((ref) => AuthRepository());
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(),
+);
 
 // Deklarasi authStateProvider
-final authStateProvider =
-    AsyncNotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
+final authStateProvider = AsyncNotifierProvider<AuthNotifier, bool>(
+  AuthNotifier.new,
+);
 
 class AuthNotifier extends AsyncNotifier<bool> {
   @override
