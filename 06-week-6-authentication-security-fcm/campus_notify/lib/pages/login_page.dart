@@ -22,15 +22,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Validasi input tidak boleh kosong
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email dan password tidak boleh kosong!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     await ref.read(authStateProvider.notifier).login(
-          _emailController.text,
-          _passwordController.text,
+          email,
+          password,
         );
 
-    // Panggil PushService melalui Riverpod
     await ref.read(pushServiceProvider).initialize(
       onNavigate: (route) {
-        // Logika navigasi jika ada payload
       },
     );
   }
