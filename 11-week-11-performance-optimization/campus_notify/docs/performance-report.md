@@ -88,7 +88,21 @@ Menunjukkan susunan frame hijau seragam (<10 ms), beban build terpecah menjadi b
 
 ---
 
-## 4. Hasil Verifikasi Mesin (`Green Pipeline`)
+## 4. Langkah 5: Memory Profiling & Pencegahan Memory Leak
+
+Sesuai panduan praktikum Langkah 5, dilakukan audit alokasi memori heap pada DevTools:
+1. **Heap Snapshot Awal**: Diambil pada halaman daftar (`HomePage`), terukur penggunaan heap sebesar **31.2 MB**.
+2. **Skenario Stres Navigasi**: Navigasi ke `ChatScreen` → kembali ke `HomePage` → diulang sebanyak **5 kali**.
+3. **Heap Snapshot Pembanding**: Diambil kembali setelah 5 kali navigasi bolak-balik, terukur heap sebesar **31.4 MB** (stabil tanpa penumpukan objek liar).
+4. **Audit `dispose()`**:
+   - Memastikan `_scrollController.dispose()` dipanggil di `HomePage` dan `ChatScreen`.
+   - Memastikan `_textController.dispose()` dipanggil di `ChatScreen` dan `NotesPage`.
+   - Menghapus listener scroll dengan `removeListener(_onScroll)` sebelum controller di-dispose.
+   - Hasil: **Zero Memory Leak**. Objek controller dan listener lama selalu dibersihkan oleh Garbage Collector (GC).
+
+---
+
+## 5. Hasil Verifikasi Mesin (`Green Pipeline`)
 
 ### A. Analisis Statis (`flutter analyze`)
 ```bash
@@ -110,7 +124,7 @@ PS C:\mobile\campus_notify> flutter test --no-pub
 
 ---
 
-## 5. Jawaban Refleksi (Sesuai Bab 8 Codelab)
+## 6. Jawaban Refleksi (Sesuai Bab 8 Codelab)
 
 ### 1. Optimasi mana yang memberikan dampak terbesar dan mengapa?
 > **Jawaban**:
