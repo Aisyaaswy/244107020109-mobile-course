@@ -76,61 +76,62 @@ class FakeIntegrationNoteRepository implements NoteRepository {
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('pengguna dapat menavigasi ke halaman catatan dan menambahkan tugas', (
-    WidgetTester tester,
-  ) async {
-    final fakeNoteRepo = FakeIntegrationNoteRepository();
+  testWidgets(
+    'pengguna dapat menavigasi ke halaman catatan dan menambahkan tugas',
+    (WidgetTester tester) async {
+      final fakeNoteRepo = FakeIntegrationNoteRepository();
 
-    // Jalankan aplikasi dengan Fake Dependencies untuk lingkungan pengujian independen
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          pushServiceProvider.overrideWithValue(FakeIntegrationPushService()),
-          noteRepositoryProvider.overrideWithValue(fakeNoteRepo),
-          notesProvider.overrideWith((ref) async => fakeNoteRepo._notes),
-          tokenStoreProvider.overrideWithValue(FakeTokenStore()),
-          authStateProvider.overrideWith(FakeAuthNotifier.new),
-        ],
-        child: const MyApp(),
-      ),
-    );
+      // Jalankan aplikasi dengan Fake Dependencies untuk lingkungan pengujian independen
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            pushServiceProvider.overrideWithValue(FakeIntegrationPushService()),
+            noteRepositoryProvider.overrideWithValue(fakeNoteRepo),
+            notesProvider.overrideWith((ref) async => fakeNoteRepo._notes),
+            tokenStoreProvider.overrideWithValue(FakeTokenStore()),
+            authStateProvider.overrideWith(FakeAuthNotifier.new),
+          ],
+          child: const MyApp(),
+        ),
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    // 1. Verifikasi halaman utama terbuka
-    expect(find.text('Kampus Notify'), findsOneWidget);
+      // 1. Verifikasi halaman utama terbuka
+      expect(find.text('Kampus Notify'), findsOneWidget);
 
-    // 2. Navigasi ke halaman Catatan Kampus melalui IconButton di AppBar
-    final notesIcon = find.byTooltip('Catatan Kampus');
-    expect(notesIcon, findsOneWidget);
-    await tester.tap(notesIcon);
-    await tester.pumpAndSettle();
+      // 2. Navigasi ke halaman Catatan Kampus melalui IconButton di AppBar
+      final notesIcon = find.byTooltip('Catatan Kampus');
+      expect(notesIcon, findsOneWidget);
+      await tester.tap(notesIcon);
+      await tester.pumpAndSettle();
 
-    // 3. Verifikasi halaman Catatan terbuka
-    expect(find.text('Catatan'), findsOneWidget);
-    expect(find.text('Tugas Pendahuluan'), findsOneWidget);
+      // 3. Verifikasi halaman Catatan terbuka
+      expect(find.text('Catatan'), findsOneWidget);
+      expect(find.text('Tugas Pendahuluan'), findsOneWidget);
 
-    // 4. Buka dialog tambah tugas
-    final addButton = find.byKey(const Key('add-task-button'));
-    expect(addButton, findsOneWidget);
-    await tester.tap(addButton);
-    await tester.pumpAndSettle();
+      // 4. Buka dialog tambah tugas
+      final addButton = find.byKey(const Key('add-task-button'));
+      expect(addButton, findsOneWidget);
+      await tester.tap(addButton);
+      await tester.pumpAndSettle();
 
-    // 5. Masukkan judul tugas baru pada input form
-    final titleField = find.byKey(const Key('task-title-field'));
-    expect(titleField, findsOneWidget);
-    await tester.enterText(titleField, 'Baca materi');
+      // 5. Masukkan judul tugas baru pada input form
+      final titleField = find.byKey(const Key('task-title-field'));
+      expect(titleField, findsOneWidget);
+      await tester.enterText(titleField, 'Baca materi');
 
-    // 6. Tekan tombol Simpan
-    final saveButton = find.byKey(const Key('save-task-button'));
-    expect(saveButton, findsOneWidget);
-    await tester.tap(saveButton);
-    await tester.pumpAndSettle();
+      // 6. Tekan tombol Simpan
+      final saveButton = find.byKey(const Key('save-task-button'));
+      expect(saveButton, findsOneWidget);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
 
-    // 7. Verifikasi tugas baru berhasil tersimpan dan tampil di antarmuka
-    expect(
-      fakeNoteRepo._notes.any((element) => element.title == 'Baca materi'),
-      isTrue,
-    );
-  });
+      // 7. Verifikasi tugas baru berhasil tersimpan dan tampil di antarmuka
+      expect(
+        fakeNoteRepo._notes.any((element) => element.title == 'Baca materi'),
+        isTrue,
+      );
+    },
+  );
 }
