@@ -188,7 +188,7 @@ Sebelum berkas workflow di-push ke repositori GitHub, seluruh pemeriksaan telah 
 | **Format Kode** | `dart format --output=none --set-exit-if-changed .` | **LULUS (Code 0)** | Sebanyak 53 berkas Dart telah terformat rapi sesuai konvensi resmi Dart. |
 | **Analisis Statis** | `flutter analyze --fatal-infos` | **LULUS (Code 0)** | *No issues found!* Bebas dari error, warning, maupun info linter. |
 | **Pengujian Otomatis** | `flutter test --coverage` | **LULUS (Code 0)** | 51/51 skenario pengujian unit & widget test lulus 100%. |
-| **Build Android** | `flutter build apk` & `flutter build appbundle` | **SIAP (Configured)** | Skrip build rilis terintegrasi pada runner Ubuntu GitHub Actions. |
+| **Build Android** | `flutter build apk` & `flutter build appbundle` | **LULUS (Code 0)** | Berhasil dikompilasi di GitHub Actions runner Ubuntu menghasilkan APK (`app-release.apk`) dan AAB (`app-release.aab`) diunggah ke artifact `android-builds`. |
 
 ---
 
